@@ -1,0 +1,98 @@
+[gd_scene format=3 uid="uid://bagss4bhw14ss"]
+
+[ext_resource type="Script" uid="uid://0owbclotjs3y" path="res://Player.gd" id="1_xhfnw"]
+[ext_resource type="AudioStream" uid="uid://8gsdi857rdqo" path="res://Watergun_Shoot_1.wav" id="2_kpjcp"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_kpjcp"]
+radius = 31.016125
+
+[sub_resource type="Gradient" id="Gradient_xhfnw"]
+offsets = PackedFloat32Array(0, 0.7289157)
+colors = PackedColorArray(0.43529412, 1, 1, 1, 0, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_kpjcp"]
+gradient = SubResource("Gradient_xhfnw")
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(0, 0)
+
+[sub_resource type="Gradient" id="Gradient_kpjcp"]
+offsets = PackedFloat32Array(0, 0.3554217)
+colors = PackedColorArray(1, 1, 1, 1, 0, 0, 0, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_kne1u"]
+gradient = SubResource("Gradient_kpjcp")
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(0, 0)
+
+[sub_resource type="Gradient" id="Gradient_kne1u"]
+colors = PackedColorArray(0.50928617, 0.50928617, 0.50928617, 1, 0.50980395, 0.50980395, 0.50980395, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_e80uo"]
+gradient = SubResource("Gradient_kne1u")
+
+[sub_resource type="Gradient" id="Gradient_cxr5p"]
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_tdg3f"]
+gradient = SubResource("Gradient_cxr5p")
+
+[node name="CharacterBody2D" type="CharacterBody2D" unique_id=1047727710]
+motion_mode = 1
+script = ExtResource("1_xhfnw")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1323841679]
+shape = SubResource("CircleShape2D_kpjcp")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1873844012]
+texture = SubResource("GradientTexture2D_kpjcp")
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=468641400]
+zoom = Vector2(1.25, 1.25)
+position_smoothing_enabled = true
+
+[node name="WeaponOffset" type="Marker2D" parent="." unique_id=660160]
+
+[node name="WeaponPoint" type="Marker2D" parent="WeaponOffset" unique_id=1799761282]
+position = Vector2(57, 0)
+
+[node name="WaterGun" type="Node2D" parent="WeaponOffset/WeaponPoint" unique_id=651216843]
+visible = false
+
+[node name="WeaponSprite" type="Sprite2D" parent="WeaponOffset/WeaponPoint/WaterGun" unique_id=1618535666]
+texture = SubResource("GradientTexture2D_kne1u")
+
+[node name="ShootPoint" type="Marker2D" parent="WeaponOffset/WeaponPoint/WaterGun" unique_id=527312738]
+position = Vector2(19, 0)
+
+[node name="GunSound" type="AudioStreamPlayer2D" parent="." unique_id=1276216597]
+stream = ExtResource("2_kpjcp")
+
+[node name="TimeBetweenShots" type="Timer" parent="." unique_id=486113695]
+
+[node name="RegenTimer" type="Timer" parent="." unique_id=1479427987]
+one_shot = true
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=98535377]
+
+[node name="StaminaBar" type="TextureProgressBar" parent="CanvasLayer" unique_id=195777121]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -250.0
+offset_top = -74.0
+offset_right = 250.0
+offset_bottom = -54.0
+grow_horizontal = 2
+grow_vertical = 0
+step = 0.01
+value = 100.0
+nine_patch_stretch = true
+texture_under = SubResource("GradientTexture2D_e80uo")
+texture_progress = SubResource("GradientTexture2D_tdg3f")
+
+[connection signal="timeout" from="TimeBetweenShots" to="." method="_on_time_between_shots_timeout"]
+[connection signal="timeout" from="RegenTimer" to="." method="_on_regen_timer_timeout"]
