@@ -1,0 +1,146 @@
+[gd_scene format=4 uid="uid://y4u4e7xgdmhh"]
+
+[ext_resource type="Script" uid="uid://c27ufh4kobr0j" path="res://core/classes/class_level.gd" id="1_1uo3k"]
+[ext_resource type="PackedScene" uid="uid://bagss4bhw14ss" path="res://src/player/player.tscn" id="1_mno8e"]
+[ext_resource type="Texture2D" uid="uid://dak3x2ejygwqe" path="res://placeholders/collision.png" id="2_qh4hx"]
+[ext_resource type="Script" uid="uid://skdi25ur1egv" path="res://core/classes/class_camera.gd" id="2_vq8d1"]
+[ext_resource type="Script" uid="uid://c72m35xkmub10" path="res://src/levels/test/rooms/rm_test_1.gd" id="3_v5o3d"]
+[ext_resource type="Script" uid="uid://couvvlmdjpgct" path="res://src/room/door/obj_roomDoor.gd" id="6_uuif0"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_1uo3k"]
+texture = ExtResource("2_qh4hx")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-16, -16, 16, -16, 16, 16, -16, 16)
+1:0/0 = 0
+1:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-16, -16, 16, 16, -16, 16)
+
+[sub_resource type="TileSet" id="TileSet_v5o3d"]
+tile_size = Vector2i(32, 32)
+physics_layer_0/collision_layer = 1
+physics_layer_0/collision_mask = 0
+sources/0 = SubResource("TileSetAtlasSource_1uo3k")
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_4opra"]
+size = Vector2(24, 128)
+
+[node name="Level" type="Node2D" unique_id=1138538706 node_paths=PackedStringArray("player", "camera", "rooms")]
+script = ExtResource("1_1uo3k")
+player = NodePath("Player")
+camera = NodePath("Camera")
+rooms = NodePath("Rooms")
+default_room_name = "Test 1"
+
+[node name="Camera" type="Camera2D" parent="." unique_id=1955955960]
+zoom = Vector2(1.25, 1.25)
+script = ExtResource("2_vq8d1")
+
+[node name="Player" parent="." unique_id=1047727710 instance=ExtResource("1_mno8e")]
+position = Vector2(5, 3)
+
+[node name="Rooms" type="Node2D" parent="." unique_id=2078969172]
+
+[node name="Test 1" type="Node2D" parent="Rooms" unique_id=1823308097]
+script = ExtResource("3_v5o3d")
+entrances = Array[Vector2]([Vector2(32, 0), Vector2(-320, -288), Vector2(320, -288)])
+camera_limits = true
+cm_limit_top = -736.0
+cm_limit_bottom = 128.0
+cm_limit_left = -384.0
+cm_limit_right = 416.0
+draw_camera_limits = true
+draw_entrance_ids = true
+
+[node name="Design" type="Node2D" parent="Rooms/Test 1" unique_id=566757150]
+
+[node name="Collision" type="TileMapLayer" parent="Rooms/Test 1/Design" unique_id=1300002643]
+tile_map_data = PackedByteArray("AAD//wMAAAAAAAAAAAAAAAMAAAAAAAAAAAABAAMAAAAAAAAAAAD+/wMAAAAAAAAAAAD9/wMAAAAAAAAAAAD8/wMAAAAAAAAAAAD7/wMAAAAAAAAAAAD6/wMAAAAAAAAAAAD5/wMAAAAAAAAAAAD4/wMAAAAAAAAAAAD3/wMAAAAAAAAAAAD2/wMAAAAAAAAAAAD1/wMAAAAAAAAAAAD0/wMAAAAAAAAAAAACAAMAAAAAAAAAAAADAAMAAAAAAAAAAAAEAAMAAAAAAAAAAAAFAAMAAAAAAAAAAAAGAAMAAAAAAAAAAAAHAAMAAAAAAAAAAAAIAAMAAAAAAAAAAAAJAAMAAAAAAAAAAAAKAAMAAAAAAAAAAAALAAMAAAAAAAAAAAAMAAMAAAAAAAAAAAAMAOn/AAAAAAAAAAAMAOr/AAAAAAAAAAAMAOv/AAAAAAAAAAAMAOz/AAAAAAAAAAAMAO3/AAAAAAAAAAAMAO7/AAAAAAAAAAAMAO//AAAAAAAAAAAMAPD/AAAAAAAAAAAMAPH/AAAAAAAAAAAMAPL/AAAAAAAAAAAMAPP/AAAAAAAAAAAMAPn/AAAAAAAAAAAMAPr/AAAAAAAAAAAMAPv/AAAAAAAAAAAMAPz/AAAAAAAAAAAMAP3/AAAAAAAAAAAMAP7/AAAAAAAAAAAMAP//AAAAAAAAAAAMAAAAAAAAAAAAAAAMAAEAAAAAAAAAAAAMAAIAAAAAAAAAAAD0/wIAAAAAAAAAAAD0/wEAAAAAAAAAAAD0/wAAAAAAAAAAAAD0////AAAAAAAAAAD0//7/AAAAAAAAAAD0//3/AAAAAAAAAAD0//z/AAAAAAAAAAD0//v/AAAAAAAAAAD0//r/AAAAAAAAAAD0//n/AAAAAAAAAAD0//P/AAAAAAAAAAD0//L/AAAAAAAAAAD0//H/AAAAAAAAAAD0//D/AAAAAAAAAAD0/+//AAAAAAAAAAD0/+7/AAAAAAAAAAD0/+3/AAAAAAAAAAD0/+z/AAAAAAAAAAD0/+v/AAAAAAAAAAD0/+r/AAAAAAAAAAD0/+n/AAAAAAAAAAD1/+n/AAAAAAAAAAD2/+n/AAAAAAAAAAD3/+n/AAAAAAAAAAD4/+n/AAAAAAAAAAD5/+n/AAAAAAAAAAD6/+n/AAAAAAAAAAD7/+n/AAAAAAAAAAD8/+n/AAAAAAAAAAD9/+n/AAAAAAAAAAD+/+n/AAAAAAAAAAD//+n/AAAAAAAAAAAAAOn/AAAAAAAAAAABAOn/AAAAAAAAAAACAOn/AAAAAAAAAAADAOn/AAAAAAAAAAAEAOn/AAAAAAAAAAAFAOn/AAAAAAAAAAAGAOn/AAAAAAAAAAAHAOn/AAAAAAAAAAAIAOn/AAAAAAAAAAAJAOn/AAAAAAAAAAAKAOn/AAAAAAAAAAALAOn/AAAAAAAAAAD0//T/AAAAAAAAAAAMAPT/AAAAAAAAAAA=")
+tile_set = SubResource("TileSet_v5o3d")
+
+[node name="Doors" type="Node2D" parent="Rooms/Test 1" unique_id=1335079735]
+
+[node name="RoomDoor" type="Area2D" parent="Rooms/Test 1/Doors" unique_id=1136875536]
+position = Vector2(-396, -296)
+script = ExtResource("6_uuif0")
+target_room_name = "Test 2"
+active_by_default = true
+metadata/_custom_type_script = "uid://couvvlmdjpgct"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Rooms/Test 1/Doors/RoomDoor" unique_id=1165675218]
+position = Vector2(0, 8)
+shape = SubResource("RectangleShape2D_4opra")
+
+[node name="RoomDoor2" type="Area2D" parent="Rooms/Test 1/Doors" unique_id=1119945241]
+position = Vector2(432, -296)
+script = ExtResource("6_uuif0")
+target_room_name = "Test 3"
+active_by_default = true
+metadata/_custom_type_script = "uid://couvvlmdjpgct"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Rooms/Test 1/Doors/RoomDoor2" unique_id=1355220333]
+position = Vector2(0, 8)
+shape = SubResource("RectangleShape2D_4opra")
+
+[node name="Test 2" type="Node2D" parent="Rooms" unique_id=1735674310]
+position = Vector2(-992, 0)
+script = ExtResource("3_v5o3d")
+entrances = Array[Vector2]([Vector2(-768, -288)])
+camera_limits = true
+cm_limit_top = -480.0
+cm_limit_bottom = -96.0
+cm_limit_left = -1252.0
+cm_limit_right = -700.0
+draw_camera_limits = true
+draw_entrance_ids = true
+
+[node name="Doors" type="Node2D" parent="Rooms/Test 2" unique_id=234032698]
+
+[node name="RoomDoor" type="Area2D" parent="Rooms/Test 2/Doors" unique_id=762256774]
+position = Vector2(300, -296)
+script = ExtResource("6_uuif0")
+target_room_name = "Test 1"
+target_entrance_id = 1
+active_by_default = true
+metadata/_custom_type_script = "uid://couvvlmdjpgct"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Rooms/Test 2/Doors/RoomDoor" unique_id=33814141]
+position = Vector2(0, 8)
+shape = SubResource("RectangleShape2D_4opra")
+
+[node name="Design" type="Node2D" parent="Rooms/Test 2" unique_id=1402587507]
+
+[node name="Collision" type="TileMapLayer" parent="Rooms/Test 2/Design" unique_id=495144967]
+tile_map_data = PackedByteArray("AAD4//H/AAAAAAAAAAD4//L/AAAAAAAAAAD4//P/AAAAAAAAAAD4//T/AAAAAAAAAAD4//n/AAAAAAAAAAD4//r/AAAAAAAAAAD4//v/AAAAAAAAAAD4//z/AAAAAAAAAAD5//H/AAAAAAAAAAD5//z/AAAAAAAAAAD6//H/AAAAAAAAAAD6//z/AAAAAAAAAAD7//H/AAAAAAAAAAD7//z/AAAAAAAAAAD8//H/AAAAAAAAAAD8//z/AAAAAAAAAAD9//H/AAAAAAAAAAD9//z/AAAAAAAAAAD+//H/AAAAAAAAAAD+//z/AAAAAAAAAAD///H/AAAAAAAAAAD///z/AAAAAAAAAAAAAPH/AAAAAAAAAAAAAPz/AAAAAAAAAAABAPH/AAAAAAAAAAABAPz/AAAAAAAAAAACAPH/AAAAAAAAAAACAPz/AAAAAAAAAAADAPH/AAAAAAAAAAADAPz/AAAAAAAAAAAEAPH/AAAAAAAAAAAEAPz/AAAAAAAAAAAFAPH/AAAAAAAAAAAFAPz/AAAAAAAAAAAGAPH/AAAAAAAAAAAGAPz/AAAAAAAAAAAHAPH/AAAAAAAAAAAHAPz/AAAAAAAAAAAIAPH/AAAAAAAAAAAIAPL/AAAAAAAAAAAIAPP/AAAAAAAAAAAIAPT/AAAAAAAAAAAIAPn/AAAAAAAAAAAIAPr/AAAAAAAAAAAIAPv/AAAAAAAAAAAIAPz/AAAAAAAAAAA=")
+tile_set = SubResource("TileSet_v5o3d")
+
+[node name="Test 3" type="Node2D" parent="Rooms" unique_id=1615666711]
+position = Vector2(992, 0)
+script = ExtResource("3_v5o3d")
+entrances = Array[Vector2]([Vector2(728, -288)])
+camera_limits = true
+cm_limit_top = -576.0
+cm_limit_bottom = -32.0
+cm_limit_left = 672.0
+cm_limit_right = 1344.0
+draw_camera_limits = true
+draw_entrance_ids = true
+
+[node name="Doors" type="Node2D" parent="Rooms/Test 3" unique_id=1340097543]
+
+[node name="RoomDoor" type="Area2D" parent="Rooms/Test 3/Doors" unique_id=684363837]
+position = Vector2(-332, -296)
+script = ExtResource("6_uuif0")
+target_room_name = "Test 1"
+target_entrance_id = 2
+active_by_default = true
+metadata/_custom_type_script = "uid://couvvlmdjpgct"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Rooms/Test 3/Doors/RoomDoor" unique_id=1091682417]
+position = Vector2(0, 8)
+shape = SubResource("RectangleShape2D_4opra")
+
+[node name="Design" type="Node2D" parent="Rooms/Test 3" unique_id=1189107386]
+
+[node name="Collision" type="TileMapLayer" parent="Rooms/Test 3/Design" unique_id=367832574]
+tile_map_data = PackedByteArray("AAD2/+7/AAAAAAAAAAD2/+//AAAAAAAAAAD2//D/AAAAAAAAAAD2//H/AAAAAAAAAAD2//L/AAAAAAAAAAD2//P/AAAAAAAAAAD2//n/AAAAAAAAAAD2//r/AAAAAAAAAAD2//v/AAAAAAAAAAD2//z/AAAAAAAAAAD2//3/AAAAAAAAAAD2//7/AAAAAAAAAAD3/+7/AAAAAAAAAAD3//7/AAAAAAAAAAD4/+7/AAAAAAAAAAD4//7/AAAAAAAAAAD5/+7/AAAAAAAAAAD5//7/AAAAAAAAAAD6/+7/AAAAAAAAAAD6//7/AAAAAAAAAAD7/+7/AAAAAAAAAAD7//7/AAAAAAAAAAD8/+7/AAAAAAAAAAD8//7/AAAAAAAAAAD9/+7/AAAAAAAAAAD9//7/AAAAAAAAAAD+/+7/AAAAAAAAAAD+//7/AAAAAAAAAAD//+7/AAAAAAAAAAD///7/AAAAAAAAAAAAAO7/AAAAAAAAAAAAAP7/AAAAAAAAAAABAO7/AAAAAAAAAAABAP7/AAAAAAAAAAACAO7/AAAAAAAAAAACAP7/AAAAAAAAAAADAO7/AAAAAAAAAAADAP7/AAAAAAAAAAAEAO7/AAAAAAAAAAAEAP7/AAAAAAAAAAAFAO7/AAAAAAAAAAAFAP7/AAAAAAAAAAAGAO7/AAAAAAAAAAAGAP7/AAAAAAAAAAAHAO7/AAAAAAAAAAAHAP7/AAAAAAAAAAAIAO7/AAAAAAAAAAAIAP7/AAAAAAAAAAAJAO7/AAAAAAAAAAAJAP7/AAAAAAAAAAAKAO7/AAAAAAAAAAAKAO//AAAAAAAAAAAKAPD/AAAAAAAAAAAKAPH/AAAAAAAAAAAKAPL/AAAAAAAAAAAKAPP/AAAAAAAAAAAKAPT/AAAAAAAAAAAKAPX/AAAAAAAAAAAKAPb/AAAAAAAAAAAKAPf/AAAAAAAAAAAKAPj/AAAAAAAAAAAKAPn/AAAAAAAAAAAKAPr/AAAAAAAAAAAKAPv/AAAAAAAAAAAKAPz/AAAAAAAAAAAKAP3/AAAAAAAAAAAKAP7/AAAAAAAAAAD2//T/AAAAAAAAAAA=")
+tile_set = SubResource("TileSet_v5o3d")
