@@ -15,11 +15,6 @@ run/main_scene="uid://y4u4e7xgdmhh"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
 
-<<<<<<< Updated upstream
-[dotnet]
-
-project/assembly_name="Cozy Game"
-=======
 [display]
 
 window/stretch/mode="canvas_items"
@@ -81,7 +76,6 @@ Shoot={
 2d_physics/layer_2="Player Hitbox"
 2d_physics/layer_3="Enemy Hitbox"
 2d_physics/layer_4="Interaction Collision"
->>>>>>> Stashed changes
 
 [physics]
 
