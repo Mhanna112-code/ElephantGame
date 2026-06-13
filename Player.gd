@@ -9,6 +9,9 @@ var Sprinting = false
 var Stamina
 var RegeneratingStamina = true
 @onready var stamina_bar: TextureProgressBar = $CanvasLayer/StaminaBar
+@onready var stamina_anim: AnimationPlayer = $CanvasLayer/StaminaAnim
+
+
 #Gun
 var debounce
 var WeaponOut = false
@@ -18,26 +21,40 @@ const WATER_BULLET = preload("uid://d3rv0ku666nm8")
 @onready var weapon_point: Marker2D = $WeaponOffset/WeaponPoint
 @onready var weapon_offset: Marker2D = $WeaponOffset
 @onready var water_gun: Node2D = $WeaponOffset/WeaponPoint/WaterGun
+var MaxAmmo = 10
+var Ammo = 15
+
+#Panning
+var desiredOffset: Vector2
+var min_offset = -200.0
+var max_offset = 200.0
 
 func _ready() -> void:
+	Ammo = MaxAmmo
 	Stamina = MaxStamina
 	stamina_bar.max_value = MaxStamina
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("Run"):
 		if !WeaponOut:
+			if RegeneratingStamina && stamina_anim.animation_finished:
+				stamina_anim.play("StaminaBurn")
 			Sprinting = true
-			Speed = 200
 	elif event.is_action_released("Run"):
 		Sprinting = false
-		Speed = 150
+		$RegenTimer.start()
 	if event.is_action_pressed("Aim"):
 		if !Sprinting:
 			water_gun.visible = true
 			WeaponOut = true
+			$Aim.visible = true
+			Input.mouse_mode = Input.MOUSE_MODE_HIDDEN
 	elif event.is_action_released("Aim"):
 		water_gun.visible = false
 		WeaponOut = false
+		$Aim.visible = false
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+		$Camera2D.global_position = global_position
 	if event.is_action_pressed("Shoot") && WeaponOut:
 		Shoot()
 
@@ -68,17 +85,20 @@ func _physics_process(delta: float) -> void:
 		RegeneratingStamina = false
 	else:
 		Speed = 150
-		if $RegenTimer.is_stopped():
-			$RegenTimer.start()
 		#print("StartRegen")
 	move_and_slide()
 
 func _process(_delta: float) -> void:
 	stamina_bar.value = Stamina
+	$Aim.global_position = get_global_mouse_position()
+	if WeaponOut:
+		cameraUpdate()
+	queue_redraw()
 
 func Shoot():
-	if !debounce:
+	if !debounce && Ammo > 0:
 		debounce = true
+		Ammo -= 1
 		var BulletClone = WATER_BULLET.instantiate()
 		BulletClone.global_position = shoot_point.global_position
 		BulletClone.global_rotation = shoot_point.global_rotation
@@ -92,4 +112,16 @@ func _on_time_between_shots_timeout() -> void:
 
 func _on_regen_timer_timeout() -> void:
 	RegeneratingStamina = true
+	stamina_anim.play("StaminaRegen")
 	#print("StartRegen")
+
+func _draw() -> void:
+	if WeaponOut:
+		draw_line(to_local($WeaponOffset/WeaponPoint.global_position), to_local(get_global_mouse_position()), Color.WHITE)
+
+func cameraUpdate():
+	desiredOffset = (get_global_mouse_position() - $Camera2D.position) * 0.5
+	desiredOffset.x = clamp(desiredOffset.x, min_offset, max_offset)
+	desiredOffset.y = clamp(desiredOffset.y, min_offset / 2, max_offset / 2)
+	
+	$Camera2D.global_position = global_position + desiredOffset

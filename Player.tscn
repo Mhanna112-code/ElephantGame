@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://0owbclotjs3y" path="res://Player.gd" id="1_xhfnw"]
 [ext_resource type="AudioStream" uid="uid://8gsdi857rdqo" path="res://Watergun_Shoot_1.wav" id="2_kpjcp"]
+[ext_resource type="Texture2D" uid="uid://4l6csct45k41" path="res://Aim.png" id="3_kne1u"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_kpjcp"]
 radius = 31.016125
@@ -37,6 +38,60 @@ colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 1)
 
 [sub_resource type="GradientTexture2D" id="GradientTexture2D_tdg3f"]
 gradient = SubResource("Gradient_cxr5p")
+
+[sub_resource type="Animation" id="Animation_kpjcp"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("StaminaBar:self_modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Color(1, 1, 1, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_kne1u"]
+resource_name = "StaminaBurn"
+length = 0.5
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("StaminaBar:self_modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.5),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Color(1, 1, 1, 0), Color(1, 1, 1, 1)]
+}
+
+[sub_resource type="Animation" id="Animation_e80uo"]
+resource_name = "StaminaRegen"
+length = 0.5
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("StaminaBar:self_modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.5),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Color(1, 1, 1, 1), Color(1, 1, 1, 0)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_cxr5p"]
+_data = {
+&"RESET": SubResource("Animation_kpjcp"),
+&"StaminaBurn": SubResource("Animation_kne1u"),
+&"StaminaRegen": SubResource("Animation_e80uo")
+}
 
 [node name="CharacterBody2D" type="CharacterBody2D" unique_id=1047727710]
 motion_mode = 1
@@ -77,6 +132,7 @@ one_shot = true
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=98535377]
 
 [node name="StaminaBar" type="TextureProgressBar" parent="CanvasLayer" unique_id=195777121]
+self_modulate = Color(1, 1, 1, 0)
 anchors_preset = 7
 anchor_left = 0.5
 anchor_top = 1.0
@@ -93,6 +149,26 @@ value = 100.0
 nine_patch_stretch = true
 texture_under = SubResource("GradientTexture2D_e80uo")
 texture_progress = SubResource("GradientTexture2D_tdg3f")
+
+[node name="StaminaAnim" type="AnimationPlayer" parent="CanvasLayer" unique_id=1106797785]
+libraries/ = SubResource("AnimationLibrary_cxr5p")
+
+[node name="TextureProgressBar" type="TextureProgressBar" parent="CanvasLayer" unique_id=254273944]
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -102.0
+offset_top = -128.0
+grow_horizontal = 0
+grow_vertical = 0
+
+[node name="Aim" type="Sprite2D" parent="." unique_id=1755045592]
+visible = false
+position = Vector2(141, 37)
+scale = Vector2(0.3, 0.3)
+texture = ExtResource("3_kne1u")
 
 [connection signal="timeout" from="TimeBetweenShots" to="." method="_on_time_between_shots_timeout"]
 [connection signal="timeout" from="RegenTimer" to="." method="_on_regen_timer_timeout"]
