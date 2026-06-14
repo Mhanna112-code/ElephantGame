@@ -1,0 +1,23 @@
+[gd_scene format=3 uid="uid://uulkk5rl5xk4"]
+
+[ext_resource type="Texture2D" uid="uid://ex0tph4v7jpr" path="res://src/levels/the_entrance/tiles/ts_lvl1_entrance_d.png" id="1_6eg8s"]
+
+[node name="Train" type="Node2D" unique_id=1579791331]
+position = Vector2(16, 0)
+
+[node name="Cart 3" type="Sprite2D" parent="." unique_id=2134329276]
+position = Vector2(-120, 0)
+texture = ExtResource("1_6eg8s")
+region_enabled = true
+region_rect = Rect2(4, 4, 130, 70)
+
+[node name="Cart 2" type="Sprite2D" parent="." unique_id=2108100671]
+texture = ExtResource("1_6eg8s")
+region_enabled = true
+region_rect = Rect2(141, 4, 124, 67)
+
+[node name="Cart 1" type="Sprite2D" parent="." unique_id=504576976]
+position = Vector2(104, 0)
+texture = ExtResource("1_6eg8s")
+region_enabled = true
+region_rect = Rect2(395, 4, 91, 67)

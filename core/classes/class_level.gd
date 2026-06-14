@@ -32,4 +32,5 @@ func get_room(room_name:String) -> Room:
 #endregion
 
 func _ready() -> void:
-	go_to_room(default_room_name, default_entrance_id)
+	if !default_room_name.is_empty():
+		go_to_room(default_room_name, default_entrance_id)

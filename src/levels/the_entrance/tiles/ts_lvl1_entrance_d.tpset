@@ -1,0 +1,123 @@
+{
+	"textures": [
+		{
+			"image": "ts_lvl1_entrance_d.png",
+			"size": {
+				"w": 543,
+				"h": 118
+			},
+			"sprites": [
+				{
+					"filename": "train_2.png",
+					"region": {
+						"x": 4,
+						"y": 4,
+						"w": 129.5,
+						"h": 70
+					},
+					"margin": {
+						"x": 0,
+						"y": 0,
+						"w": 0,
+						"h": 0
+					}
+				},
+				{
+					"filename": "train_3.png",
+					"region": {
+						"x": 141.5,
+						"y": 4,
+						"w": 123.5,
+						"h": 67
+					},
+					"margin": {
+						"x": 0,
+						"y": 0,
+						"w": 0,
+						"h": 0
+					}
+				},
+				{
+					"filename": "fountain.png",
+					"region": {
+						"x": 273,
+						"y": 4,
+						"w": 114,
+						"h": 75
+					},
+					"margin": {
+						"x": 0,
+						"y": 0,
+						"w": 0,
+						"h": 0
+					}
+				},
+				{
+					"filename": "broken_pipe_1.png",
+					"region": {
+						"x": 141.5,
+						"y": 79,
+						"w": 106,
+						"h": 30.5
+					},
+					"margin": {
+						"x": 0,
+						"y": 0,
+						"w": 0,
+						"h": 0
+					}
+				},
+				{
+					"filename": "railroad_1.png",
+					"region": {
+						"x": 4,
+						"y": 82,
+						"w": 96,
+						"h": 32
+					},
+					"margin": {
+						"x": 0,
+						"y": 0,
+						"w": 0,
+						"h": 0
+					}
+				},
+				{
+					"filename": "train_1.png",
+					"region": {
+						"x": 395,
+						"y": 4,
+						"w": 90.5,
+						"h": 67
+					},
+					"margin": {
+						"x": 0,
+						"y": 0,
+						"w": 0,
+						"h": 0
+					}
+				},
+				{
+					"filename": "broken_pipe_2.png",
+					"region": {
+						"x": 493.5,
+						"y": 4,
+						"w": 45.5,
+						"h": 26
+					},
+					"margin": {
+						"x": 0,
+						"y": 0,
+						"w": 0,
+						"h": 0
+					}
+				}
+			]
+		}
+	],
+	"meta": {
+		"app": "http://free-tex-packer.com",
+		"version": "0.6.7",
+		"format": "RGBA8888",
+	}
+}

@@ -2,7 +2,7 @@ class_name RoomDoor extends Area2D
 #region Exports
 @export var target_room_name:String = ""
 @export var target_entrance_id:int = 0
-@export var active_by_default:bool = false
+@export var active_by_default:bool = true
 #endregion
 
 @onready var level:Level = get_tree().current_scene

@@ -1,4 +1,4 @@
-class_name Camera extends Node2D
+class_name Camera extends Camera2D
 #region Exports
 @export var mode:MODES = MODES.PLAYER
 @export var limits_already_enabled:bool = true

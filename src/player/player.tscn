@@ -1,19 +1,14 @@
 [gd_scene format=3 uid="uid://bagss4bhw14ss"]
 
 [ext_resource type="Script" uid="uid://0owbclotjs3y" path="res://src/player/player.gd" id="1_xhfnw"]
+[ext_resource type="Texture2D" uid="uid://bik2rfuwx3vy7" path="res://placeholders/weep.png" id="2_rxibo"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_4anbu"]
-size = Vector2(64, 64)
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_rxibo"]
+radius = 16.0
+height = 48.0
 
-[sub_resource type="Gradient" id="Gradient_xhfnw"]
-offsets = PackedFloat32Array(0, 0.7289157)
-colors = PackedColorArray(0.43529412, 1, 1, 1, 0, 1, 1, 0)
-
-[sub_resource type="GradientTexture2D" id="GradientTexture2D_kpjcp"]
-gradient = SubResource("Gradient_xhfnw")
-fill = 1
-fill_from = Vector2(0.5, 0.5)
-fill_to = Vector2(0, 0)
+[sub_resource type="CircleShape2D" id="CircleShape2D_mf2ua"]
+radius = 25.298222
 
 [sub_resource type="Gradient" id="Gradient_kpjcp"]
 offsets = PackedFloat32Array(0, 0.3554217)
@@ -38,23 +33,25 @@ colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 1)
 gradient = SubResource("Gradient_cxr5p")
 
 [node name="Player" type="CharacterBody2D" unique_id=1047727710]
-collision_mask = 0
+collision_layer = 0
 motion_mode = 1
 script = ExtResource("1_xhfnw")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1323841679]
-shape = SubResource("RectangleShape2D_4anbu")
+shape = SubResource("CapsuleShape2D_rxibo")
 
 [node name="Hitbox" type="Area2D" parent="." unique_id=1401257785]
+visible = false
 collision_layer = 2
 collision_mask = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Hitbox" unique_id=570646160]
-shape = SubResource("RectangleShape2D_4anbu")
+shape = SubResource("CircleShape2D_mf2ua")
 debug_color = Color(0.9667323, 2.2140146e-06, 0.48168057, 0.41960785)
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1873844012]
-texture = SubResource("GradientTexture2D_kpjcp")
+scale = Vector2(0.02, 0.02)
+texture = ExtResource("2_rxibo")
 
 [node name="WeaponOffset" type="Marker2D" parent="." unique_id=660160]
 

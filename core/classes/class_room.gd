@@ -1,5 +1,5 @@
 @tool
-@abstract class_name Room extends Node2D
+class_name Room extends Node2D
 #region Exports
 @export var entrances:Array[Vector2] # Stores all possible spawnpoint for the player when entering the room
 
@@ -105,10 +105,10 @@ func exit() -> void:
 	_exit()
 
 # Override this when entering a room!
-@abstract func _enter() -> void
+func _enter() -> void: pass
 
 # Override this when exiting a room!
-@abstract func _exit() -> void
+func _exit() -> void: pass
 
 # Override for _process!
-@abstract func _rm_update(delta) -> void
+func _rm_update(delta) -> void: pass
