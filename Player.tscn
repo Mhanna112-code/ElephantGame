@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://bagss4bhw14ss"]
 
 [ext_resource type="Script" uid="uid://0owbclotjs3y" path="res://Player.gd" id="1_xhfnw"]
-[ext_resource type="AudioStream" uid="uid://8gsdi857rdqo" path="res://Watergun_Shoot_1.wav" id="2_kpjcp"]
+[ext_resource type="AudioStream" uid="uid://b5fw5fr0q7s5c" path="res://Watergun_Shoot_New.wav" id="2_kne1u"]
 [ext_resource type="Texture2D" uid="uid://4l6csct45k41" path="res://Aim.png" id="3_kne1u"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_kpjcp"]
@@ -122,7 +122,7 @@ texture = SubResource("GradientTexture2D_kne1u")
 position = Vector2(19, 0)
 
 [node name="GunSound" type="AudioStreamPlayer2D" parent="." unique_id=1276216597]
-stream = ExtResource("2_kpjcp")
+stream = ExtResource("2_kne1u")
 
 [node name="TimeBetweenShots" type="Timer" parent="." unique_id=486113695]
 
