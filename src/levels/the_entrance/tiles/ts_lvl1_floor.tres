@@ -1,0 +1,52 @@
+[gd_resource type="TileSet" format=3 uid="uid://b8qs2nnkvl2lr"]
+
+[ext_resource type="Texture2D" uid="uid://bhqjwhrbok72a" path="res://src/levels/the_entrance/tiles/ts_lvl1_entrance_f.png" id="1_qvenu"]
+[ext_resource type="Texture2D" uid="uid://blg5axfghvipr" path="res://src/levels/the_entrance/tiles/ts_lvl1_cafeteria_f.png" id="2_d74y1"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_x2seh"]
+texture = ExtResource("1_qvenu")
+texture_region_size = Vector2i(32, 32)
+3:0/size_in_atlas = Vector2i(2, 2)
+3:0/0 = 0
+3:0/0/texture_origin = Vector2i(-16, -16)
+5:0/size_in_atlas = Vector2i(2, 2)
+5:0/0 = 0
+5:0/0/texture_origin = Vector2i(-16, -16)
+5:0/0/probability = 0.75
+7:0/size_in_atlas = Vector2i(2, 2)
+7:0/0 = 0
+7:0/0/texture_origin = Vector2i(-16, -16)
+7:0/0/probability = 0.25
+9:0/size_in_atlas = Vector2i(2, 2)
+9:0/0 = 0
+9:0/0/texture_origin = Vector2i(-16, -16)
+9:0/0/probability = 0.25
+0:0/0 = 0
+1:0/0 = 0
+2:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_tl8i7"]
+texture = ExtResource("2_d74y1")
+texture_region_size = Vector2i(32, 32)
+2:0/size_in_atlas = Vector2i(2, 2)
+2:0/0 = 0
+2:0/0/texture_origin = Vector2i(-16, -16)
+4:0/size_in_atlas = Vector2i(2, 2)
+4:0/0 = 0
+4:0/0/texture_origin = Vector2i(-16, -16)
+4:0/0/probability = 0.75
+6:0/size_in_atlas = Vector2i(2, 2)
+6:0/0 = 0
+6:0/0/texture_origin = Vector2i(-16, -16)
+6:0/0/probability = 0.25
+8:0/size_in_atlas = Vector2i(2, 2)
+8:0/0 = 0
+8:0/0/texture_origin = Vector2i(-16, -16)
+8:0/0/probability = 0.25
+
+[resource]
+tile_size = Vector2i(32, 32)
+physics_layer_0/collision_layer = 1
+physics_layer_0/collision_mask = 0
+sources/0 = SubResource("TileSetAtlasSource_x2seh")
+sources/1 = SubResource("TileSetAtlasSource_tl8i7")
