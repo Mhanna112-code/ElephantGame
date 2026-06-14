@@ -27,7 +27,7 @@ var Ammo = 15
 #Panning
 var desiredOffset: Vector2
 var min_offset = -200.0
-var max_offset = 200.0
+var max_offset = 150.0
 
 func _ready() -> void:
 	Ammo = MaxAmmo

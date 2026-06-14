@@ -2,7 +2,6 @@
 
 [ext_resource type="PackedScene" uid="uid://bagss4bhw14ss" path="res://Player.tscn" id="1_mno8e"]
 [ext_resource type="Texture2D" uid="uid://dhi7n41556ldi" path="res://icon.svg" id="2_qh4hx"]
-[ext_resource type="PackedScene" uid="uid://bqywnxof526m1" path="res://Shopkeeper.tscn" id="3_1uo3k"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1uo3k"]
 
@@ -21,6 +20,3 @@ shape = SubResource("RectangleShape2D_1uo3k")
 [node name="Sprite2D" type="Sprite2D" parent="StaticBody2D" unique_id=533848321]
 scale = Vector2(0.2, 0.2)
 texture = ExtResource("2_qh4hx")
-
-[node name="Node2D" parent="." unique_id=914204685 instance=ExtResource("3_1uo3k")]
-position = Vector2(-73, -210)
