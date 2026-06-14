@@ -130,7 +130,7 @@ _data = {
 &"RESET": SubResource("Animation_dtqjt")
 }
 
-[node name="CharacterBody2D" type="CharacterBody2D" unique_id=1047727710]
+[node name="CharacterBody2D" type="CharacterBody2D" unique_id=1047727710 groups=["Player"]]
 motion_mode = 1
 script = ExtResource("1_xhfnw")
 
@@ -153,9 +153,9 @@ position = Vector2(0, 13)
 position = Vector2(18, 0)
 
 [node name="WaterGun" type="Node2D" parent="WeaponOffset/WeaponPoint" unique_id=651216843]
+visible = false
 
 [node name="WeaponSprite" type="Sprite2D" parent="WeaponOffset/WeaponPoint/WaterGun" unique_id=1618535666]
-position = Vector2(0, -2)
 scale = Vector2(0.185, 0.185)
 texture = ExtResource("3_cxr5p")
 
