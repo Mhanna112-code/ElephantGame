@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="Cozy Game"
-run/main_scene="uid://y4u4e7xgdmhh"
+run/main_scene="uid://bhmtvmfylqbt2"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
 

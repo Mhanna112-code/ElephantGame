@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://d3rv0ku666nm8"]
 
-[ext_resource type="Script" uid="uid://copduesdu1or4" path="res://water_bullet.gd" id="1_7eq0l"]
+[ext_resource type="Script" path="res://water_bullet.gd" id="1_7eq0l"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_guwbu"]
 radius = 12.165525

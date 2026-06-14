@@ -10,6 +10,7 @@ var Stamina
 var RegeneratingStamina = true
 @onready var stamina_bar: TextureProgressBar = $CanvasLayer/StaminaBar
 @onready var stamina_anim: AnimationPlayer = $CanvasLayer/StaminaAnim
+@onready var player_anim: AnimationPlayer = $PlayerAnim
 
 
 #Gun
@@ -65,15 +66,25 @@ func _physics_process(delta: float) -> void:
 	chardir.y = Input.get_axis("ui_up", "ui_down")
 	
 	weapon_offset.rotation = lerp_angle(weapon_offset.rotation, (get_global_mouse_position() - global_position).angle(), 10.5*delta)
-	if mouseDir.x > 0:
-		character_sprite.flip_h = false
-	else:
-		character_sprite.flip_h = true
+	if WeaponOut:
+		if mouseDir.x > 0:
+			character_sprite.flip_h = false
+			$WeaponOffset/WeaponPoint/WaterGun/WeaponSprite.flip_v = false
+		else:
+			character_sprite.flip_h = true
+			$WeaponOffset/WeaponPoint/WaterGun/WeaponSprite.flip_v = true
 	
 	if chardir:
 		velocity = chardir * Speed
+		player_anim.play("Moving")
+		if !WeaponOut:
+			if chardir.x > 0:
+				character_sprite.flip_h = false
+			elif chardir.x < 0:
+				character_sprite.flip_h = true
 	else:
 		velocity = velocity.move_toward(Vector2.ZERO, Speed)
+		player_anim.play("Idle")
 	
 	if RegeneratingStamina && Stamina < MaxStamina:
 		Stamina += delta + 0.1
@@ -117,7 +128,7 @@ func _on_regen_timer_timeout() -> void:
 
 func _draw() -> void:
 	if WeaponOut:
-		draw_line(to_local($WeaponOffset/WeaponPoint.global_position), to_local(get_global_mouse_position()), Color.WHITE)
+		draw_line(to_local(shoot_point.global_position), to_local(get_global_mouse_position()), Color.WHITE)
 
 func cameraUpdate():
 	desiredOffset = (get_global_mouse_position() - $Camera2D.position) * 0.5
