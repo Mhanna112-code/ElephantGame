@@ -1,7 +1,7 @@
 [gd_scene format=4 uid="uid://y4u4e7xgdmhh"]
 
 [ext_resource type="Script" uid="uid://cdxk1gisld0pd" path="res://src/levels/test/lvl_test.gd" id="1_4opra"]
-[ext_resource type="PackedScene" uid="uid://bagss4bhw14ss" path="res://src/player/player.tscn" id="1_mno8e"]
+[ext_resource type="PackedScene" uid="uid://di22hd3o8qpo" path="res://src/player/player.tscn" id="1_mno8e"]
 [ext_resource type="Texture2D" uid="uid://dak3x2ejygwqe" path="res://placeholders/collision.png" id="2_qh4hx"]
 [ext_resource type="Script" uid="uid://skdi25ur1egv" path="res://core/classes/class_camera.gd" id="2_vq8d1"]
 [ext_resource type="Script" uid="uid://c72m35xkmub10" path="res://src/levels/test/rooms/rm_test_1.gd" id="3_v5o3d"]
@@ -63,7 +63,7 @@ rooms = NodePath("Rooms")
 default_room_name = "Cafeteria"
 
 [node name="Camera" type="Camera2D" parent="." unique_id=1955955960]
-zoom = Vector2(1.25, 1.25)
+zoom = Vector2(2, 2)
 script = ExtResource("2_vq8d1")
 
 [node name="Player" parent="." unique_id=1047727710 instance=ExtResource("1_mno8e")]
@@ -94,7 +94,6 @@ tile_set = SubResource("TileSet_v5o3d")
 position = Vector2(-396, -296)
 script = ExtResource("6_uuif0")
 target_room_name = "Hall 1"
-active_by_default = true
 metadata/_custom_type_script = "uid://couvvlmdjpgct"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Rooms/Entrance/Doors/RoomDoor" unique_id=1165675218]
@@ -105,7 +104,6 @@ shape = SubResource("RectangleShape2D_4opra")
 position = Vector2(432, -296)
 script = ExtResource("6_uuif0")
 target_room_name = "Cafeteria"
-active_by_default = true
 metadata/_custom_type_script = "uid://couvvlmdjpgct"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Rooms/Entrance/Doors/RoomDoor2" unique_id=1355220333]
@@ -142,7 +140,6 @@ position = Vector2(-332, -296)
 script = ExtResource("6_uuif0")
 target_room_name = "Entrance"
 target_entrance_id = 2
-active_by_default = true
 metadata/_custom_type_script = "uid://couvvlmdjpgct"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Rooms/Cafeteria/Doors/RoomDoor" unique_id=1091682417]
@@ -153,7 +150,6 @@ shape = SubResource("RectangleShape2D_4opra")
 position = Vector2(368, -304)
 script = ExtResource("6_uuif0")
 target_room_name = "Gift Shop"
-active_by_default = true
 metadata/_custom_type_script = "uid://couvvlmdjpgct"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Rooms/Cafeteria/Doors/RoomDoor2" unique_id=339472949]
@@ -164,7 +160,6 @@ shape = SubResource("RectangleShape2D_4opra")
 position = Vector2(192, -592)
 script = ExtResource("6_uuif0")
 target_room_name = "Electricity"
-active_by_default = true
 metadata/_custom_type_script = "uid://couvvlmdjpgct"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Rooms/Cafeteria/Doors/RoomDoor3" unique_id=788482618]
@@ -209,7 +204,6 @@ position = Vector2(0, -24)
 script = ExtResource("6_uuif0")
 target_room_name = "Entrance"
 target_entrance_id = 1
-active_by_default = true
 metadata/_custom_type_script = "uid://couvvlmdjpgct"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Rooms/Electricity/Doors/RoomDoor" unique_id=940858956]
@@ -241,7 +235,6 @@ position = Vector2(-171, -200)
 script = ExtResource("6_uuif0")
 target_room_name = "Entrance"
 target_entrance_id = 1
-active_by_default = true
 metadata/_custom_type_script = "uid://couvvlmdjpgct"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Rooms/Gift Shop/Doors/RoomDoor" unique_id=786880282]
@@ -273,7 +266,6 @@ position = Vector2(300, -296)
 script = ExtResource("6_uuif0")
 target_room_name = "Entrance"
 target_entrance_id = 1
-active_by_default = true
 metadata/_custom_type_script = "uid://couvvlmdjpgct"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Rooms/Hall 1/Doors/RoomDoor" unique_id=33814141]
@@ -284,7 +276,6 @@ shape = SubResource("RectangleShape2D_4opra")
 position = Vector2(-1230, -296)
 script = ExtResource("6_uuif0")
 target_room_name = "Hall 2"
-active_by_default = true
 metadata/_custom_type_script = "uid://couvvlmdjpgct"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Rooms/Hall 1/Doors/RoomDoor2" unique_id=524211553]
@@ -316,7 +307,6 @@ position = Vector2(240, -64)
 script = ExtResource("6_uuif0")
 target_room_name = "Hall 1"
 target_entrance_id = 1
-active_by_default = true
 metadata/_custom_type_script = "uid://couvvlmdjpgct"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Rooms/Hall 2/Doors/RoomDoor" unique_id=1416199121]
@@ -326,7 +316,6 @@ shape = SubResource("RectangleShape2D_6o1q4")
 position = Vector2(240, -616)
 script = ExtResource("6_uuif0")
 target_room_name = "Hall 3"
-active_by_default = true
 metadata/_custom_type_script = "uid://couvvlmdjpgct"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Rooms/Hall 2/Doors/RoomDoor2" unique_id=125465732]
@@ -358,7 +347,6 @@ position = Vector2(-1230, -296)
 script = ExtResource("6_uuif0")
 target_room_name = "Hall 2"
 target_entrance_id = 1
-active_by_default = true
 metadata/_custom_type_script = "uid://couvvlmdjpgct"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Rooms/Hall 3/Doors/RoomDoor" unique_id=1870085019]
@@ -369,7 +357,6 @@ shape = SubResource("RectangleShape2D_4opra")
 position = Vector2(96, -496)
 script = ExtResource("6_uuif0")
 target_room_name = "Control Cabin"
-active_by_default = true
 metadata/_custom_type_script = "uid://couvvlmdjpgct"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Rooms/Hall 3/Doors/RoomDoor2" unique_id=1097454432]
@@ -415,7 +402,6 @@ position = Vector2(-448, 392)
 script = ExtResource("6_uuif0")
 target_room_name = "Hall 3"
 target_entrance_id = 1
-active_by_default = true
 metadata/_custom_type_script = "uid://couvvlmdjpgct"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Rooms/Control Cabin/Doors/RoomDoor" unique_id=1206366190]

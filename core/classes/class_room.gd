@@ -28,7 +28,7 @@ var _entrances:Array[Vector2]
 
 # Global
 var level:Level
-var player:Player
+var player
 var camera:Camera
 
 func _ready() -> void:
@@ -36,7 +36,7 @@ func _ready() -> void:
 		_request_draw_camera_limits()
 	else:
 		level = get_tree().current_scene
-		player = level.player
+		player = $"../../Objects/Player"
 		camera = level.camera
 
 func _process(delta: float) -> void:

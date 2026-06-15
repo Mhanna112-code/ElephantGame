@@ -1,24 +1,14 @@
-[gd_scene format=3 uid="uid://bagss4bhw14ss"]
+[gd_scene format=3 uid="uid://di22hd3o8qpo"]
 
-[ext_resource type="Script" uid="uid://0owbclotjs3y" path="res://src/player/player.gd" id="1_xhfnw"]
-[ext_resource type="Texture2D" uid="uid://bik2rfuwx3vy7" path="res://placeholders/weep.png" id="2_rxibo"]
+[ext_resource type="Script" uid="uid://0owbclotjs3y" path="res://src/player/Player.gd" id="1_xhfnw"]
+[ext_resource type="Texture2D" uid="uid://d2vl8qjj4dvrj" path="res://Weepy.png" id="2_e80uo"]
+[ext_resource type="AudioStream" uid="uid://b5fw5fr0q7s5c" path="res://Watergun_Shoot_New.wav" id="2_kne1u"]
+[ext_resource type="Texture2D" uid="uid://sse01oqm4rhr" path="res://Water gun.png" id="3_cxr5p"]
+[ext_resource type="Texture2D" uid="uid://4l6csct45k41" path="res://Aim.png" id="3_kne1u"]
 
-[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_rxibo"]
-radius = 16.0
-height = 48.0
-
-[sub_resource type="CircleShape2D" id="CircleShape2D_mf2ua"]
-radius = 25.298222
-
-[sub_resource type="Gradient" id="Gradient_kpjcp"]
-offsets = PackedFloat32Array(0, 0.3554217)
-colors = PackedColorArray(1, 1, 1, 1, 0, 0, 0, 0)
-
-[sub_resource type="GradientTexture2D" id="GradientTexture2D_kne1u"]
-gradient = SubResource("Gradient_kpjcp")
-fill = 1
-fill_from = Vector2(0.5, 0.5)
-fill_to = Vector2(0, 0)
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_cxr5p"]
+radius = 28.0
+height = 96.0
 
 [sub_resource type="Gradient" id="Gradient_kne1u"]
 colors = PackedColorArray(0.50928617, 0.50928617, 0.50928617, 1, 0.50980395, 0.50980395, 0.50980395, 1)
@@ -32,40 +22,149 @@ colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 1)
 [sub_resource type="GradientTexture2D" id="GradientTexture2D_tdg3f"]
 gradient = SubResource("Gradient_cxr5p")
 
-[node name="Player" type="CharacterBody2D" unique_id=1047727710]
-collision_layer = 0
+[sub_resource type="Animation" id="Animation_kpjcp"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("StaminaBar:self_modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Color(1, 1, 1, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_kne1u"]
+resource_name = "StaminaBurn"
+length = 0.5
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("StaminaBar:self_modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.5),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Color(1, 1, 1, 0), Color(1, 1, 1, 1)]
+}
+
+[sub_resource type="Animation" id="Animation_e80uo"]
+resource_name = "StaminaRegen"
+length = 0.5
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("StaminaBar:self_modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.5),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Color(1, 1, 1, 1), Color(1, 1, 1, 0)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_cxr5p"]
+_data = {
+&"RESET": SubResource("Animation_kpjcp"),
+&"StaminaBurn": SubResource("Animation_kne1u"),
+&"StaminaRegen": SubResource("Animation_e80uo")
+}
+
+[sub_resource type="Animation" id="Animation_cxr5p"]
+resource_name = "Idle"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(3, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_tdg3f"]
+resource_name = "Moving"
+length = 0.2
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector2(3, 0), Vector2(3, -10), Vector2(3, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_dtqjt"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(3, -10)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_5ncpa"]
+_data = {
+&"Idle": SubResource("Animation_cxr5p"),
+&"Moving": SubResource("Animation_tdg3f"),
+&"RESET": SubResource("Animation_dtqjt")
+}
+
+[node name="CharacterBody2D2" type="CharacterBody2D" unique_id=1047727710 groups=["Player"]]
+scale = Vector2(0.5, 0.5)
 motion_mode = 1
 script = ExtResource("1_xhfnw")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1323841679]
-shape = SubResource("CapsuleShape2D_rxibo")
-
-[node name="Hitbox" type="Area2D" parent="." unique_id=1401257785]
-visible = false
-collision_layer = 2
-collision_mask = 0
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Hitbox" unique_id=570646160]
-shape = SubResource("CircleShape2D_mf2ua")
-debug_color = Color(0.9667323, 2.2140146e-06, 0.48168057, 0.41960785)
+shape = SubResource("CapsuleShape2D_cxr5p")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1873844012]
-scale = Vector2(0.02, 0.02)
-texture = ExtResource("2_rxibo")
+position = Vector2(3, -10)
+scale = Vector2(0.04, 0.04)
+texture = ExtResource("2_e80uo")
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=468641400]
+zoom = Vector2(2, 2)
+position_smoothing_enabled = true
 
 [node name="WeaponOffset" type="Marker2D" parent="." unique_id=660160]
+position = Vector2(0, 13)
 
 [node name="WeaponPoint" type="Marker2D" parent="WeaponOffset" unique_id=1799761282]
-position = Vector2(57, 0)
+position = Vector2(18, 0)
 
 [node name="WaterGun" type="Node2D" parent="WeaponOffset/WeaponPoint" unique_id=651216843]
 visible = false
 
 [node name="WeaponSprite" type="Sprite2D" parent="WeaponOffset/WeaponPoint/WaterGun" unique_id=1618535666]
-texture = SubResource("GradientTexture2D_kne1u")
+scale = Vector2(0.185, 0.185)
+texture = ExtResource("3_cxr5p")
 
 [node name="ShootPoint" type="Marker2D" parent="WeaponOffset/WeaponPoint/WaterGun" unique_id=527312738]
-position = Vector2(19, 0)
+position = Vector2(30, 1)
+
+[node name="GunSound" type="AudioStreamPlayer2D" parent="." unique_id=1276216597]
+stream = ExtResource("2_kne1u")
 
 [node name="TimeBetweenShots" type="Timer" parent="." unique_id=486113695]
 
@@ -75,6 +174,7 @@ one_shot = true
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=98535377]
 
 [node name="StaminaBar" type="TextureProgressBar" parent="CanvasLayer" unique_id=195777121]
+self_modulate = Color(1, 1, 1, 0)
 anchors_preset = 7
 anchor_left = 0.5
 anchor_top = 1.0
@@ -91,6 +191,30 @@ value = 100.0
 nine_patch_stretch = true
 texture_under = SubResource("GradientTexture2D_e80uo")
 texture_progress = SubResource("GradientTexture2D_tdg3f")
+
+[node name="StaminaAnim" type="AnimationPlayer" parent="CanvasLayer" unique_id=1106797785]
+libraries/ = SubResource("AnimationLibrary_cxr5p")
+
+[node name="TextureProgressBar" type="TextureProgressBar" parent="CanvasLayer" unique_id=254273944]
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -102.0
+offset_top = -128.0
+grow_horizontal = 0
+grow_vertical = 0
+
+[node name="Aim" type="Sprite2D" parent="." unique_id=1755045592]
+visible = false
+position = Vector2(141, 37)
+scale = Vector2(0.3, 0.3)
+texture = ExtResource("3_kne1u")
+
+[node name="PlayerAnim" type="AnimationPlayer" parent="." unique_id=1040154231]
+libraries/ = SubResource("AnimationLibrary_5ncpa")
+blend_times = [&"Moving", &"Idle", 0.1, &"Moving", &"Moving", 0.1]
 
 [connection signal="timeout" from="TimeBetweenShots" to="." method="_on_time_between_shots_timeout"]
 [connection signal="timeout" from="RegenTimer" to="." method="_on_regen_timer_timeout"]

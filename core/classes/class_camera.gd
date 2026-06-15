@@ -6,7 +6,7 @@ class_name Camera extends Camera2D
 
 #region Components
 @onready var level:Level = get_tree().current_scene
-@onready var player:Player = level.player
+@onready var player = $"../Player"
 #endregion
 
 #region Properties
