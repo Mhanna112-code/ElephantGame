@@ -21,7 +21,9 @@ public class TrunkSwing : MonoBehaviour
 
     [Header("Simulation")]
     [SerializeField] private int simPoints = 8;         // Verlet particles (coarse); min 4
-    [SerializeField] private float trunkLength = 4.5f;  // total rest length of the trunk
+    [SerializeField] private float trunkLength = 4.5f;  // total rest length (fallback if not auto)
+    [Tooltip("Measure trunk length from the assigned bones at Start so the sim matches the rig.")]
+    [SerializeField] private bool autoLengthFromBones = true;
     [SerializeField] private int iterations = 12;       // constraint passes = stiffness
     [SerializeField] private float damping = 0.98f;
     [SerializeField] private Vector3 gravity = new Vector3(0f, -9.81f, 0f);
@@ -48,6 +50,7 @@ public class TrunkSwing : MonoBehaviour
     private Vector3 target;     // reach target on the ground plane
     private bool pinned;        // is the tip currently pinned?
     private Vector3 pinPoint;   // where the tip is pinned
+    private Vector3 prevAnchor; // last frame's base position, to carry the trunk with a moving body
 
     private void Start()
     {
@@ -60,8 +63,21 @@ public class TrunkSwing : MonoBehaviour
         simPoints = Mathf.Max(4, simPoints);
         pos = new Vector3[simPoints];
         prev = new Vector3[simPoints];
+
+        // Match the sim to the actual rig: total length = sum of the gaps between the
+        // assigned bones. Falls back to the serialized trunkLength if we cannot measure.
+        if (autoLengthFromBones && chain != null && chain.Count >= 2)
+        {
+            float measured = 0f;
+            for (int i = 0; i < chain.Count - 1; i++)
+                if (chain[i] != null && chain[i + 1] != null)
+                    measured += Vector3.Distance(chain[i].position, chain[i + 1].position);
+            if (measured > 0.01f) trunkLength = measured;
+        }
         seg = trunkLength / (simPoints - 1);
 
+        // Lay the particles out along the existing bones if we have them, otherwise
+        // straight out along the body's forward axis.
         Vector3 root = transform.position;
         Vector3 dir = transform.forward;
         for (int i = 0; i < simPoints; i++)
@@ -69,6 +85,7 @@ public class TrunkSwing : MonoBehaviour
             pos[i] = root + dir * seg * i;
             prev[i] = pos[i];
         }
+        prevAnchor = root;
         pinned = false;
     }
 
@@ -76,6 +93,7 @@ public class TrunkSwing : MonoBehaviour
     {
         if (pos == null || pos.Length != simPoints) InitSim();
 
+        CarryWithBody();
         UpdateTarget();
         Integrate();
         for (int k = 0; k < iterations; k++) SolveConstraints();
@@ -90,6 +108,23 @@ public class TrunkSwing : MonoBehaviour
         Plane plane = new Plane(Vector3.up, transform.position);
         if (plane.Raycast(ray, out float enter))
             target = ray.GetPoint(enter);
+    }
+
+    // The elephant body moves every frame (endless runner). Shift the whole trunk by
+    // however far the anchor moved, adding the SAME delta to pos and prev so no fake
+    // velocity is introduced. This is what keeps the trunk attached to a moving body:
+    // physics (reach, gravity, collision) then only adds deviation on top of the ride.
+    // Skipped in grab mode, where the tip is pinned and the body is meant to swing.
+    private void CarryWithBody()
+    {
+        Vector3 anchor = transform.position;
+        if (!grabMode)
+        {
+            Vector3 move = anchor - prevAnchor;
+            if (move.sqrMagnitude > 0f)
+                for (int i = 0; i < simPoints; i++) { pos[i] += move; prev[i] += move; }
+        }
+        prevAnchor = anchor;
     }
 
     // Verlet integration: x += (x - prevX) * damping + gravity.
