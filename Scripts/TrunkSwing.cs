@@ -11,12 +11,15 @@ using UnityEngine;
 //      particles, then the visible bone Transforms are distributed along that curve
 //      so the trunk looks smooth (no kinks) even with only a handful of sim points.
 //
-// Drop-in note: the serialized 'chain' list is kept (same name/type as the old FABRIK
-// version) so the bone Transforms already assigned in the scene stay wired up.
+// Drop-in note: the bone list is named 'segments' to match what the scene already
+// serialized (the original TrunkAiming component stored the bones under 'segments';
+// Unity binds serialized data by field name, so this is what makes the bones load).
 public class TrunkSwing : MonoBehaviour
 {
-    [Header("Bones (visible trunk segments, base -> tip)")]
-    [SerializeField] private List<Transform> chain = new List<Transform>();
+    [Header("Bones (visible trunk segments)")]
+    [SerializeField] private List<Transform> segments = new List<Transform>();
+    [Tooltip("Sort bones by distance from the body at Start, so a scrambled list order still forms a base->tip chain.")]
+    [SerializeField] private bool autoSortByDistance = true;
     [SerializeField] private bool orientBones = true;   // rotate each bone along the curve
 
     [Header("Simulation")]
@@ -55,7 +58,39 @@ public class TrunkSwing : MonoBehaviour
     private void Start()
     {
         if (cam == null) cam = Camera.main;
+        AcquireSegments();
         InitSim();
+    }
+
+    // Get the bones, then order them. Two independent ways the list can be wrong, both handled:
+    //   1) The serialized 'segments' list may not rebind (the component still carries a stale
+    //      TrunkAiming missing-script marker). If it comes back empty, self-heal by finding the
+    //      trunk pieces parented under us by name, so the trunk works without any editor step.
+    //   2) The list order is not spatial (authored base, tip, then backwards). Sort by distance
+    //      from the body so index 0 is the base and the last is the tip; otherwise the spline
+    //      zig-zags across scrambled points.
+    private void AcquireSegments()
+    {
+        if (segments == null) segments = new List<Transform>();
+        segments.RemoveAll(s => s == null);
+
+        if (segments.Count == 0)
+        {
+            foreach (Transform t in GetComponentsInChildren<Transform>(true))
+            {
+                if (t == transform) continue;
+                if (t.name.ToLower().Contains("trunk")) segments.Add(t);
+            }
+            if (segments.Count > 0)
+                Debug.Log($"[TrunkSwing] Serialized bone list was empty; auto-found {segments.Count} trunk bones under {name}.", this);
+        }
+
+        if (autoSortByDistance && segments.Count >= 2)
+        {
+            Vector3 baseP = transform.position;
+            segments.Sort((a, b) =>
+                (a.position - baseP).sqrMagnitude.CompareTo((b.position - baseP).sqrMagnitude));
+        }
     }
 
     private void InitSim()
@@ -66,12 +101,12 @@ public class TrunkSwing : MonoBehaviour
 
         // Match the sim to the actual rig: total length = sum of the gaps between the
         // assigned bones. Falls back to the serialized trunkLength if we cannot measure.
-        if (autoLengthFromBones && chain != null && chain.Count >= 2)
+        if (autoLengthFromBones && segments != null && segments.Count >= 2)
         {
             float measured = 0f;
-            for (int i = 0; i < chain.Count - 1; i++)
-                if (chain[i] != null && chain[i + 1] != null)
-                    measured += Vector3.Distance(chain[i].position, chain[i + 1].position);
+            for (int i = 0; i < segments.Count - 1; i++)
+                if (segments[i] != null && segments[i + 1] != null)
+                    measured += Vector3.Distance(segments[i].position, segments[i + 1].position);
             if (measured > 0.01f) trunkLength = measured;
         }
         seg = trunkLength / (simPoints - 1);
@@ -205,21 +240,22 @@ public class TrunkSwing : MonoBehaviour
     // sim particles, so a coarse 8-point sim renders as a smooth, kink-free trunk.
     private void ApplyToBones()
     {
-        if (chain == null || chain.Count == 0) return;
+        if (segments == null || segments.Count == 0) return;
 
-        int n = chain.Count;
+        int n = segments.Count;
         for (int i = 0; i < n; i++)
         {
+            if (segments[i] == null) continue;
             float u = (n == 1) ? 0f : (float)i / (n - 1);   // 0..1 along the trunk
             Vector3 p = SampleSpline(u);
-            chain[i].position = p;
+            segments[i].position = p;
 
             if (orientBones)
             {
                 Vector3 ahead = SampleSpline(Mathf.Min(1f, u + 0.01f));
                 Vector3 tangent = ahead - p;
                 if (tangent.sqrMagnitude > 1e-6f)
-                    chain[i].rotation = Quaternion.LookRotation(tangent.normalized, Vector3.up);
+                    segments[i].rotation = Quaternion.LookRotation(tangent.normalized, Vector3.up);
             }
         }
     }
