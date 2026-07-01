@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class MovingColumn : MonoBehaviour
+public class MovingCol : MonoBehaviour
 {
     [SerializeField] private float moveDistance = 3f;
     [SerializeField] private float speed = 2f;
