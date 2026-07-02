@@ -4,15 +4,20 @@ using UnityEngine.SceneManagement;
 public class Travel : MonoBehaviour
 {
     [Header("Movement")]
-    [SerializeField] private float moveSpeed = 5f;
+    public static Travel Instance;
+    [SerializeField] public float moveSpeed = 5f;
     [SerializeField] private Transform cameraTransform;
     private Vector3 cameraStartOffset;
     [Header("Jump")]
     [SerializeField] private float jumpForce = 7f;
 
-    [SerializeField] private float fallLimit = -10f;
+    [SerializeField] private float fallLimit = -50f;
 
     private Vector3 startPosition;
+    private void Awake()
+    {
+        Instance = this;
+    }
 
     void Start()
     {
