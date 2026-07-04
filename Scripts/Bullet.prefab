@@ -16,7 +16,7 @@ GameObject:
   - component: {fileID: 417702573170176588}
   m_Layer: 3
   m_Name: Bullet
-  m_TagString: Untagged
+  m_TagString: Bullet
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -105,9 +105,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 997e9f690313e4c478ec1e2af8872d08, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BulletRicochet
-  bounceAngleOffset: 25
-  maxBounces: 5
   bounceSpeedMultiplier: 1.2
+  maxBounces: 5
 --- !u!136 &1500263300716390315
 CapsuleCollider:
   m_ObjectHideFlags: 0
