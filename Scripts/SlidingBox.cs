@@ -7,6 +7,10 @@ public class SlidingBox : MonoBehaviour
     public float slideSpeed = 4f;
     public float slideDuration = 3f;
 
+    // ---- Diagnostics (kept in; they show the push/E/identity checks) ----
+    [Header("Diagnostics")]
+    public bool debugLogs = true;
+
     private Rigidbody rb;
 
     private bool sliding = false;
@@ -21,6 +25,9 @@ public class SlidingBox : MonoBehaviour
         rb.constraints =
             RigidbodyConstraints.FreezeRotation |
             RigidbodyConstraints.FreezePositionZ;
+
+        if (debugLogs)
+            Debug.Log($"[SlidingBox] Start on '{name}': rb={(rb != null)} constraints={rb.constraints}", this);
     }
 
     void FixedUpdate()
@@ -32,6 +39,7 @@ public class SlidingBox : MonoBehaviour
 
         if (slideTimer >= slideDuration)
         {
+            if (debugLogs) Debug.Log($"[SlidingBox] slide duration reached ({slideTimer:F2}s >= {slideDuration}) -> stop", this);
             StopSliding();
             return;
         }
@@ -41,29 +49,48 @@ public class SlidingBox : MonoBehaviour
             rb.linearVelocity.y,
             0f
         );
+
+        if (debugLogs && Time.frameCount % 15 == 0)
+            Debug.Log($"[SlidingBox] sliding dir={slideDirection.x} vel={rb.linearVelocity} timer={slideTimer:F2}/{slideDuration}", this);
     }
 
-        void OnCollisionStay(Collision collision)
+    void OnCollisionStay(Collision collision)
     {
-        if (!collision.collider.CompareTag("Player"))
+        // FIX: identify the player by the ATTACHED RIGIDBODY (which lives on the tagged root),
+        // not the specific child collider that touched. The elephant is a rig - its
+        // CapsuleCollider and trunk bone colliders (Bone, Bone.001...) are NOT tagged "Player",
+        // so the old collision.collider.CompareTag("Player") failed for them and the box never
+        // started sliding. collision.rigidbody is the player's root body for ALL of those parts.
+        Rigidbody playerRb = collision.rigidbody;
+        bool isPlayer = playerRb != null && playerRb.CompareTag("Player");
+
+        if (debugLogs && Time.frameCount % 15 == 0)
+            Debug.Log($"[SlidingBox] Stay contact='{collision.collider.name}' body='{(playerRb != null ? playerRb.name : "null")}' " +
+                      $"isPlayer={isPlayer} E={Input.GetKey(KeyCode.E)} " +
+                      $"playerVelX={(playerRb != null ? playerRb.linearVelocity.x : 0f):F2} sliding={sliding}", this);
+
+        if (!isPlayer)
             return;
 
         // Only start a new slide if we're not already sliding
         if (sliding)
             return;
 
-        Rigidbody playerRb = collision.collider.GetComponent<Rigidbody>();
-
-        if (playerRb == null)
-            return;
-
         // Player must be pressing E
         if (!Input.GetKey(KeyCode.E))
+        {
+            if (debugLogs && Time.frameCount % 30 == 0)
+                Debug.Log($"[SlidingBox] player touching but E not held -> no slide", this);
             return;
+        }
 
         // Player must also be moving against the box
         if (Mathf.Abs(playerRb.linearVelocity.x) < 0.1f)
+        {
+            if (debugLogs && Time.frameCount % 30 == 0)
+                Debug.Log($"[SlidingBox] E held but not pushing (velX={playerRb.linearVelocity.x:F2} < 0.1) -> no slide", this);
             return;
+        }
 
         slideDirection = new Vector3(
             Mathf.Sign(playerRb.linearVelocity.x),
@@ -73,19 +100,29 @@ public class SlidingBox : MonoBehaviour
 
         sliding = true;
         slideTimer = 0f;
+
+        if (debugLogs)
+            Debug.Log($"[SlidingBox] START sliding dir={slideDirection.x} (E held, pushing velX={playerRb.linearVelocity.x:F2})", this);
     }
 
     void OnCollisionEnter(Collision collision)
     {
-        // Stop when hitting anything except the player
-        if (!collision.collider.CompareTag("Player"))
+        // Stop only when hitting a real obstacle - NOT the player's own colliders. Same identity
+        // fix: a wall has no Rigidbody (collision.rigidbody == null) so it still stops the box,
+        // but a trunk bone / capsule (whose body is the tagged player) no longer stops it.
+        Rigidbody otherRb = collision.rigidbody;
+        bool isPlayer = otherRb != null && otherRb.CompareTag("Player");
+
+        if (!isPlayer)
         {
+            if (debugLogs) Debug.Log($"[SlidingBox] hit obstacle '{collision.collider.name}' -> StopSliding", this);
             StopSliding();
         }
     }
 
     void StopSliding()
     {
+        if (debugLogs && sliding) Debug.Log($"[SlidingBox] StopSliding on '{name}'", this);
         sliding = false;
         rb.linearVelocity = new Vector3(0f, rb.linearVelocity.y, 0f);
     }
