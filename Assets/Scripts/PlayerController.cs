@@ -22,6 +22,8 @@ public class PlayerController : MonoBehaviour
     Rigidbody rb;
     bool isGrounded;
 
+    bool canShoot = true;
+
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -41,6 +43,7 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
+        Debug.Log(rb.constraints);
         CheckGround();
         Move();
 
@@ -58,8 +61,18 @@ public class PlayerController : MonoBehaviour
     {
         float x = Input.GetAxisRaw("Horizontal");
 
+        float z = 0f;
+
+        // Only allow Z movement when it has been enabled
+        if ((rb.constraints & RigidbodyConstraints.FreezePositionZ) == 0)
+        {
+            z = Input.GetAxisRaw("Vertical");
+        }
+
         Vector3 vel = rb.linearVelocity;
         vel.x = x * moveSpeed;
+        vel.z = z * moveSpeed;
+
         rb.linearVelocity = vel;
     }
 
@@ -73,21 +86,21 @@ public class PlayerController : MonoBehaviour
 
 void Shoot()
 {
-    Vector3 shootDir = GetMouseDirection();
+    if (canShoot) {
+        Vector3 shootDir = GetMouseDirection();
 
-    GameObject bullet = Instantiate(bulletPrefab, shootPoint.position, Quaternion.identity);
-    Debug.DrawRay(shootPoint.position, shootDir * 5f, Color.green, 2f);
-    BulletRicochet b = bullet.GetComponent<BulletRicochet>();
-    Debug.Log("Shoot Point: " + shootPoint.position);
-    Debug.Log("Shoot Direction: " + shootDir);
+        GameObject bullet = Instantiate(bulletPrefab, shootPoint.position, Quaternion.identity);
+        Debug.DrawRay(shootPoint.position, shootDir * 5f, Color.green, 2f);
+        BulletRicochet b = bullet.GetComponent<BulletRicochet>();
 
-    if (b != null)
-    {
-        b.Init(shootDir, bulletSpeed);
-    }
-    else
-    {
-        Debug.LogError("BulletRicochet missing on prefab!");
+        if (b != null)
+        {
+            b.Init(shootDir, bulletSpeed);
+        }
+        else
+        {
+            Debug.LogError("BulletRicochet missing on prefab!");
+        }
     }
 }
     [SerializeField] private Transform firePoint;
@@ -116,5 +129,32 @@ void Shoot()
     void CheckGround()
     {
         isGrounded = Physics.Raycast(transform.position, Vector3.down, groundCheckDistance, groundLayer);
+    }
+
+    public void EnableZMovement()
+    {
+        rb.constraints = RigidbodyConstraints.FreezeRotation;
+    }
+
+    public void DisableZMovement()
+    {
+        rb.constraints =
+            RigidbodyConstraints.FreezeRotation |
+            RigidbodyConstraints.FreezePositionZ;
+
+        // Snap back to gameplay plane
+        Vector3 pos = transform.position;
+        pos.z = 0f;
+        transform.position = pos;
+    }
+
+    public void EnableShooting()
+    {
+        canShoot = true;
+    }
+
+    public void DisableShooting()
+    {
+        canShoot = false;
     }
 }

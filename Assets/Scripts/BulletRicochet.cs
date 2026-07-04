@@ -50,43 +50,70 @@ public class BulletRicochet : MonoBehaviour
         }
 
         Vector3 normal = collision.contacts[0].normal;
-
-        // 🔒 FIX: only flatten Z, DO NOT TOUCH Y
-        // (previously you were destroying vertical reaction here)
         normal.z = 0f;
         normal.Normalize();
 
-        // Reflect movement direction
-        direction = Vector3.Reflect(direction, normal);
-        direction.z = 0f;
+        // ============================
+        // 🔥 PLATFORM LOGIC CHECK
+        // ============================
+        MovingPlatform platform =
+            collision.collider.GetComponent<MovingPlatform>();
+        FlashingPlatform platform2 =
+            collision.collider.GetComponent<FlashingPlatform>();
 
-        direction.Normalize();
-
-        // 🔥 FIX: keep energy increase per bounce
-        speed *= bounceSpeedMultiplier;
-
-        bounceCount++;
-
-        // 💥 FIX: ALWAYS apply recoil to player (not collision object)
-        if (playerRb != null)
+        if (platform != null)
         {
-            // 🔒 keep plane constraint but DO NOT destroy Y
-            normal.z = 0f;
-            normal.Normalize();
-
-            Vector3 recoilDir = normal; 
-            recoilDir.z = 0f;
-
-            // 🔥 IMPORTANT:
-            // Force upward bias when hitting ground-like surfaces
-            if (normal.y > 0.5f)
+            // ❌ RED PLATFORM → destroy bullet
+            if (!platform.ricochetEnabled)
             {
-                recoilDir.y = Mathf.Abs(recoilDir.y) + 1f; // guaranteed upward push
+                return;
             }
 
+            // ✅ GREEN PLATFORM → allow bounce
+        }
+        if (platform2 != null)
+        {
+            // ❌ RED PLATFORM → destroy bullet
+            if (!platform2.ricochetEnabled)
+            {
+                return;
+            }
+
+            // ✅ GREEN PLATFORM → allow bounce
+        }
+
+
+
+        // ============================
+        // REFLECT BULLET
+        // ============================
+        direction = Vector3.Reflect(direction, normal);
+        direction.z = 0f;
+        direction.Normalize();
+
+        speed *= bounceSpeedMultiplier;
+
+        // ============================
+        // PLAYER RECOIL (first hit only)
+        // ============================
+        if (playerRb != null && bounceCount == 0)
+        {
+            Vector3 recoilDir = normal;
+
+            if (normal.y > 0.5f)
+                recoilDir.y = Mathf.Abs(recoilDir.y) + 1f;
+
+            recoilDir.z = 0f;
             recoilDir.Normalize();
 
             playerRb.AddForce(recoilDir * speed * 0.8f, ForceMode.Impulse);
         }
+
+        bounceCount++;
+    }
+
+    void OnBecameInvisible()
+    {
+        Destroy(gameObject);
     }
 }
