@@ -85,6 +85,23 @@ public class BulletRicochet : MonoBehaviour
 
 
         // ============================
+        // 🎯 TARGET HIT
+        // A button registers the combination-lock hit, then the bullet ricochets off it
+        // (it is NOT destroyed, and it does NOT recoil the player - only walls/floors do).
+        // ============================
+        Target hitTarget = collision.collider.GetComponentInParent<Target>();
+        if (hitTarget != null && hitTarget.group != null)
+        {
+            hitTarget.group.OnTargetHit(hitTarget);
+            direction = Vector3.Reflect(direction, normal);
+            direction.z = 0f;
+            direction.Normalize();
+            speed *= bounceSpeedMultiplier;
+            bounceCount++;
+            return;
+        }
+
+        // ============================
         // REFLECT BULLET
         // ============================
         direction = Vector3.Reflect(direction, normal);
