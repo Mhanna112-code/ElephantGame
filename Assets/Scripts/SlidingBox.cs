@@ -43,9 +43,13 @@ public class SlidingBox : MonoBehaviour
         );
     }
 
-    void OnCollisionStay(Collision collision)
+        void OnCollisionStay(Collision collision)
     {
         if (!collision.collider.CompareTag("Player"))
+            return;
+
+        // Only start a new slide if we're not already sliding
+        if (sliding)
             return;
 
         Rigidbody playerRb = collision.collider.GetComponent<Rigidbody>();
@@ -53,18 +57,22 @@ public class SlidingBox : MonoBehaviour
         if (playerRb == null)
             return;
 
-        // Only start sliding if player is actually pushing
-        if (Mathf.Abs(playerRb.linearVelocity.x) > 0.1f)
-        {
-            slideDirection = new Vector3(
-                Mathf.Sign(playerRb.linearVelocity.x),
-                0f,
-                0f
-            );
+        // Player must be pressing E
+        if (!Input.GetKey(KeyCode.E))
+            return;
 
-            sliding = true;
-            slideTimer = 0f;
-        }
+        // Player must also be moving against the box
+        if (Mathf.Abs(playerRb.linearVelocity.x) < 0.1f)
+            return;
+
+        slideDirection = new Vector3(
+            Mathf.Sign(playerRb.linearVelocity.x),
+            0f,
+            0f
+        );
+
+        sliding = true;
+        slideTimer = 0f;
     }
 
     void OnCollisionEnter(Collision collision)
