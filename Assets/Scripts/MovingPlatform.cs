@@ -1,10 +1,14 @@
 using UnityEngine;
 
+[RequireComponent(typeof(BoxCollider))]
 public class MovingPlatform : MonoBehaviour
 {
+    [Header("Movement")]
     public float speed = 3f;
+
     private int direction = 1;
 
+    [Header("Ricochet")]
     public bool ricochetEnabled = false;
 
     [Header("Color")]
@@ -13,11 +17,15 @@ public class MovingPlatform : MonoBehaviour
     public Material greenMat;
 
     [Header("Wall Detection")]
-    public float detectDistance = 0.6f;
+    public float detectDistance = 0.1f;
     public LayerMask wallLayer;
+
+    private BoxCollider box;
 
     void Start()
     {
+        box = GetComponent<BoxCollider>();
+
         ricochetEnabled = false;
         UpdateColor();
     }
@@ -26,15 +34,14 @@ public class MovingPlatform : MonoBehaviour
     {
         Vector3 moveDir = Vector3.right * direction;
 
-        // 🔥 Detect wall BEFORE moving
         RaycastHit hit;
 
         bool willHitWall = Physics.BoxCast(
-            transform.position,
-            transform.localScale * 0.45f,
+            box.bounds.center,
+            box.bounds.extents,
             moveDir,
             out hit,
-            Quaternion.identity,
+            transform.rotation,
             detectDistance,
             wallLayer
         );
@@ -42,6 +49,9 @@ public class MovingPlatform : MonoBehaviour
         if (willHitWall)
         {
             direction *= -1;
+
+            // Recalculate movement after reversing
+            moveDir = Vector3.right * direction;
         }
 
         transform.position += moveDir * speed * Time.deltaTime;
@@ -50,18 +60,28 @@ public class MovingPlatform : MonoBehaviour
     public void ToggleRicochet()
     {
         ricochetEnabled = !ricochetEnabled;
-        Debug.Log("Platform toggled: " + ricochetEnabled);
         UpdateColor();
     }
 
     void UpdateColor()
     {
         if (rend == null)
-        {
-            Debug.LogError("NO RENDERER ASSIGNED ON PLATFORM");
             return;
-        }
 
         rend.material = ricochetEnabled ? greenMat : redMat;
+    }
+
+    void OnDrawGizmosSelected()
+    {
+        BoxCollider b = GetComponent<BoxCollider>();
+        if (b == null) return;
+
+        Gizmos.color = Color.yellow;
+
+        Vector3 moveDir = Vector3.right * direction;
+        Gizmos.DrawWireCube(
+            b.bounds.center + moveDir * detectDistance,
+            b.bounds.size
+        );
     }
 }
