@@ -131,23 +131,26 @@ void Shoot()
         isGrounded = Physics.Raycast(transform.position, Vector3.down, groundCheckDistance, groundLayer);
     }
 
+    public bool IsAbovePlatform { get; private set; }
+
     public void EnableZMovement()
     {
+        IsAbovePlatform = true;
         rb.constraints = RigidbodyConstraints.FreezeRotation;
     }
 
     public void DisableZMovement()
     {
+        IsAbovePlatform = false;
+
         rb.constraints =
             RigidbodyConstraints.FreezeRotation |
             RigidbodyConstraints.FreezePositionZ;
 
-        // Snap back to gameplay plane
         Vector3 pos = transform.position;
         pos.z = 0f;
         transform.position = pos;
     }
-
     public void EnableShooting()
     {
         canShoot = true;

@@ -49,28 +49,32 @@ public class TrunkSwing : MonoBehaviour
         Ray ray = cam.ScreenPointToRay(Input.mousePosition);
 
         // Log WHAT the downward ray hits, not just true/false, so we can see if platform detection works.
-        RaycastHit downHit;
-        bool isAbovePlatform = Physics.Raycast(player.position, Vector3.down, out downHit, checkDistance, platformLayer);
-        string hitName = isAbovePlatform ? downHit.collider.name : "-";
-
         Vector3 targetPos;
-        string branch;
         float xyMag = -1f;
 
-        if (isAbovePlatform)
+        PlayerController playerController = player.GetComponent<PlayerController>();
+
+        if (playerController.IsAbovePlatform)
         {
-            // 🔥 FULL 3D AIM (no plane constraint)
-            branch = "ABOVE(ray.direction)";
-            Vector3 dir = ray.direction;
-            dir.z = 0f; // still keep your 2.5D constraint
-            xyMag = dir.magnitude;   // if ~0, aim collapses onto the player
-            dir.Normalize();
-            targetPos = player.position + dir * maxReach;
+            Plane plane = new Plane(Vector3.up, player.position);
+
+            if (plane.Raycast(ray, out float enter))
+            {
+                Vector3 mouseWorld = ray.GetPoint(enter);
+
+                Vector3 offset = mouseWorld - player.position;
+                offset = Vector3.ClampMagnitude(offset, maxReach);
+
+                targetPos = player.position + offset;
+            }
+            else
+            {
+                targetPos = trunkConstraint.position;
+            }
         }
         else
         {
             // 🔒 FLAT PLANE AIM (old behavior)
-            branch = "BELOW(plane)";
             Plane plane = new Plane(Vector3.forward, player.position);
             if (plane.Raycast(ray, out float enter))
             {
@@ -95,7 +99,7 @@ public class TrunkSwing : MonoBehaviour
         if (movedThisFrame < 0.0005f) notMovingFrames++; else notMovingFrames = 0;
 
         if (debugLogs && (Time.frameCount % logEveryNFrames == 0))
-            Debug.Log($"[TrunkSwing] isAbove={isAbovePlatform} hit='{hitName}' branch={branch} " +
+            Debug.Log($"[TrunkSwing] isAbove={playerController.IsAbovePlatform}" +
                       $"timeScale={Time.timeScale:F2} dt={Time.deltaTime:F4} lerpT={lerpT:F3} xyMag={xyMag:F3} " +
                       $"mouse={Input.mousePosition} camActiveEnabled={cam.isActiveAndEnabled} " +
                       $"aimDist={(targetPos - player.position).magnitude:F3} movedThisFrame={movedThisFrame:F4} " +
@@ -115,9 +119,6 @@ public class TrunkSwing : MonoBehaviour
                     ? "target == current trunk position (nothing to move toward - mouse/aim input not updating?)"
                 : "UNKNOWN: target differs from trunk yet Lerp is not moving it";
 
-            Debug.LogWarning($"[TrunkSwing] TRUNK NOT MOVING for {notMovingFrames} frames. LIKELY CAUSE: {cause}. " +
-                             $"[isAbove={isAbovePlatform} hit='{hitName}' timeScale={Time.timeScale} dt={Time.deltaTime:F4} " +
-                             $"camActive={cam.isActiveAndEnabled} target={targetPos} trunk={trunkConstraint.position} player={player.position}]", this);
         }
 
         lastTrunkPos = trunkConstraint.position;
