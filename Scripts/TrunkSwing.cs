@@ -16,7 +16,7 @@ public class TrunkSwing : MonoBehaviour
 
     // ---- Diagnostics (leave these on; this is how we find why the trunk freezes) ----
     [Header("Diagnostics")]
-    public bool debugLogs = true;
+    public bool debugLogs = false;
     public int logEveryNFrames = 15;    // throttle the per-frame spam (~4x/sec at 60fps)
 
     // Cache the PlayerController once. Doing player.GetComponent<PlayerController>() every frame
