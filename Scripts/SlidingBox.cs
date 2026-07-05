@@ -27,7 +27,11 @@ public class SlidingBox : MonoBehaviour
             RigidbodyConstraints.FreezePositionZ;
 
         if (debugLogs)
-            Debug.Log($"[SlidingBox] Start on '{name}': rb={(rb != null)} constraints={rb.constraints}", this);
+            Debug.Log($"[SlidingBox] Start on '{name}': rb={(rb != null)} isKinematic={rb.isKinematic} " +
+                      $"useGravity={rb.useGravity} slideSpeed={slideSpeed} constraints={rb.constraints}", this);
+
+        if (slideSpeed <= 0f)
+            Debug.LogWarning($"[SlidingBox] '{name}' slideSpeed is {slideSpeed} -> the box cannot move. Set it > 0.", this);
     }
 
     void FixedUpdate()
@@ -44,14 +48,22 @@ public class SlidingBox : MonoBehaviour
             return;
         }
 
-        rb.linearVelocity = new Vector3(
-            slideDirection.x * slideSpeed,
-            rb.linearVelocity.y,
-            0f
-        );
+        // Move the box. A KINEMATIC Rigidbody ignores linearVelocity (assigning it does nothing and
+        // it reads back as zero - which is exactly what the logs showed), so it must be driven with
+        // MovePosition. A dynamic body uses velocity. Either way the box actually slides now.
+        Vector3 posBefore = rb.position;
+        if (rb.isKinematic)
+        {
+            rb.MovePosition(rb.position + new Vector3(slideDirection.x * slideSpeed * Time.fixedDeltaTime, 0f, 0f));
+        }
+        else
+        {
+            rb.linearVelocity = new Vector3(slideDirection.x * slideSpeed, rb.linearVelocity.y, 0f);
+        }
 
         if (debugLogs && Time.frameCount % 15 == 0)
-            Debug.Log($"[SlidingBox] sliding dir={slideDirection.x} vel={rb.linearVelocity} timer={slideTimer:F2}/{slideDuration}", this);
+            Debug.Log($"[SlidingBox] sliding dir={slideDirection.x} isKinematic={rb.isKinematic} slideSpeed={slideSpeed} " +
+                      $"vel={rb.linearVelocity} posDelta={(rb.position - posBefore).x:F4} timer={slideTimer:F2}/{slideDuration}", this);
     }
 
     void OnCollisionStay(Collision collision)
