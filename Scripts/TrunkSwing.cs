@@ -63,12 +63,17 @@ public class TrunkSwing : MonoBehaviour
 
         if (isAbovePlatform)
         {
-            // Marc's fix: aim on a horizontal plane and get a world POINT (no ray.direction collapse).
-            branch = "ABOVE(plane up)";
-            Plane plane = new Plane(Vector3.up, player.position);
+            // Aim on the SAME vertical XY plane as the below-platform case. Marc's plane-intersection
+            // idea was correct, but it used Vector3.up (a HORIZONTAL plane), which on a side-on 2.5D
+            // camera maps the mouse to X and Z (depth). The trunk then moved into/out of the screen -
+            // invisible from the side, so it "looked frozen." Vector3.forward keeps aim in the visible
+            // X/Y plane (mouse up/down -> trunk up/down), matching the below-platform behaviour.
+            branch = "ABOVE(plane fwd)";
+            Plane plane = new Plane(Vector3.forward, player.position);
             if (plane.Raycast(ray, out float enter))
             {
                 Vector3 offset = ray.GetPoint(enter) - player.position;
+                offset.z = 0f;
                 offset = Vector3.ClampMagnitude(offset, maxReach);
                 targetPos = player.position + offset;
             }
