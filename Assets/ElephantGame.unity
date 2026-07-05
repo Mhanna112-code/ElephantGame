@@ -2190,7 +2190,7 @@ GameObject:
   - component: {fileID: 697107258}
   - component: {fileID: 697107257}
   - component: {fileID: 697107261}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Leverbox (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2603,8 +2603,7 @@ GameObject:
   - component: {fileID: 1121770155}
   - component: {fileID: 1121770154}
   - component: {fileID: 1121770153}
-  - component: {fileID: 1121770152}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: Lever
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2626,24 +2625,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 697107260}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 17.196}
---- !u!114 &1121770152
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1121770150}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 753c616f7eb62be40a7a61b483f648ec, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Lever
-  targetPlatform: {fileID: 147709317}
-  angle: 45
-  rotateSpeed: 8
-  rend: {fileID: 1121770154}
-  offMaterial: {fileID: 2100000, guid: 08d61cfddeba6bd4786a2c2dbb3e2a5d, type: 2}
-  onMaterial: {fileID: 2100000, guid: 0e1e7e82bc9254d43a0ea50459fbf5e8, type: 2}
 --- !u!65 &1121770153
 BoxCollider:
   m_ObjectHideFlags: 0
