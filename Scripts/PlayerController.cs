@@ -24,6 +24,10 @@ public class PlayerController : MonoBehaviour
 
     bool canShoot = true;
 
+    [Header("Diagnostics")]
+    public bool debugLogs = true;
+    private Vector3 lastPos;
+
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -39,12 +43,29 @@ public class PlayerController : MonoBehaviour
                 Physics.IgnoreCollision(bulletCol, col);
             }
         }
+
+        lastPos = transform.position;
+        if (debugLogs)
+            Debug.Log($"[Player] Start pos={transform.position} (z={transform.position.z:F2}) " +
+                      $"rb={(rb != null)} constraints={(rb != null ? rb.constraints.ToString() : "no rb")}", this);
     }
 
     void Update()
     {
-        Debug.Log("IsAbovePlatform" + IsAbovePlatform);
-        Debug.Log(rb.constraints);
+        // Teleport detector: a big single-frame move with no horizontal input flags the
+        // start-of-game "teleport". The z-snap from DisableZMovement is the usual culprit.
+        float moved = (transform.position - lastPos).magnitude;
+        float inputX = Input.GetAxisRaw("Horizontal");
+        if (debugLogs && moved > 1.0f && Mathf.Abs(inputX) < 0.01f)
+            Debug.LogWarning($"[Player] TELEPORT: moved {moved:F2} in one frame with NO horizontal input. " +
+                             $"from={lastPos} to={transform.position} (delta z={(transform.position.z - lastPos.z):F2}) " +
+                             $"-> most likely DisableZMovement snapping z to 0. Author the player at z=0 to avoid it.", this);
+        lastPos = transform.position;
+
+        if (debugLogs && Time.frameCount % 30 == 0)
+            Debug.Log($"[Player] constraints={rb.constraints} grounded={isGrounded} canShoot={canShoot} " +
+                      $"pos={transform.position} vel={rb.linearVelocity}", this);
+
         CheckGround();
         Move();
 
@@ -53,7 +74,7 @@ public class PlayerController : MonoBehaviour
 
         if (Input.GetMouseButtonDown(0))
         {
-            Debug.Log("Firing input detected");
+            if (debugLogs) Debug.Log("[Player] fire input", this);
             Shoot();
         }
     }
@@ -150,6 +171,9 @@ void Shoot()
             RigidbodyConstraints.FreezePositionZ;
 
         Vector3 pos = transform.position;
+        if (debugLogs && Mathf.Abs(pos.z) > 0.001f)
+            Debug.Log($"[Player] DisableZMovement snapping z {pos.z:F2} -> 0 (this is the start-of-game teleport " +
+                      $"if the player was authored off the z=0 plane)", this);
         pos.z = 0f;
         transform.position = pos;
     }
