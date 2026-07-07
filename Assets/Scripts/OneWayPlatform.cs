@@ -16,7 +16,7 @@ public class OneWayPlatform : MonoBehaviour
             // Player is underneath the platform
             platformCollider.enabled = false;
 
-            player.DisableZMovement();
+            //player.DisableZMovement();
             player.EnableShooting();
         }
         else
@@ -25,6 +25,7 @@ public class OneWayPlatform : MonoBehaviour
                 cutsceneCam.PlayCutscene();
                 playedCutscene = true;
             }
+            Debug.Log("above platform");
             // Player is above the platform
             platformCollider.enabled = true;
             player.EnableZMovement();

@@ -43,6 +43,7 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
+        Debug.Log("IsAbovePlatform" + IsAbovePlatform);
         Debug.Log(rb.constraints);
         CheckGround();
         Move();
