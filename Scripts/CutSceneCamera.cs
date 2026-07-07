@@ -16,6 +16,39 @@ public class CutsceneCamera : MonoBehaviour
 
     private bool playing = false;
 
+    // The camera is a CHILD of the player, so the cutscene setting its WORLD position permanently
+    // corrupts its authored local offset (the "camera too close/broken" bug). Remember the original
+    // LOCAL transform so we can put the side-view camera back when leaving the top-down section.
+    private Vector3 originalLocalPos;
+    private Quaternion originalLocalRot;
+    private bool savedOriginal = false;
+
+    void Start()
+    {
+        if (cameraTransform != null)
+        {
+            originalLocalPos = cameraTransform.localPosition;
+            originalLocalRot = cameraTransform.localRotation;
+            savedOriginal = true;
+        }
+    }
+
+    // Put the camera back to its authored side-view offset. Called when the player drops below the
+    // platform (OneWayPlatform). Aborts any in-progress cutscene and makes sure the game is unpaused.
+    public void RestoreCamera()
+    {
+        if (!savedOriginal || cameraTransform == null) return;
+
+        StopAllCoroutines();
+        if (GamePause.IsPaused) GamePause.Resume();
+        playing = false;
+
+        cameraTransform.localPosition = originalLocalPos;
+        cameraTransform.localRotation = originalLocalRot;
+
+        if (debugLogs) Debug.Log("[Cutscene] RestoreCamera -> back to side-view offset", this);
+    }
+
     public void PlayCutscene()
     {
         if (debugLogs)

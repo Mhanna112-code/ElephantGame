@@ -58,7 +58,16 @@ public class OneWayPlatform : MonoBehaviour
 
         if (!above)
         {
-            // Player is underneath the platform (side-on 2.5D mode)
+            // Player is underneath the platform (side-on 2.5D mode).
+            // On the transition down, put the side-view camera back and re-arm the cutscene so the
+            // top-down camera does not stay stuck over the player (the "camera too close" bug).
+            if (playedCutscene)
+            {
+                if (cutsceneCam != null) cutsceneCam.RestoreCamera();
+                playedCutscene = false;
+                if (debugLogs) Debug.Log($"[OneWayPlatform] '{name}' -> dropped below: restored side camera, re-armed cutscene", this);
+            }
+
             if (platformCollider != null) platformCollider.enabled = false;
             player.DisableZMovement();
             player.EnableShooting();
