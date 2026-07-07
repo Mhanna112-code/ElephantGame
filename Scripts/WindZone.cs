@@ -7,7 +7,7 @@ public class WindZoneForce : MonoBehaviour
 
     public Rigidbody playerRB;
 
-    void FixedUpdate()
+    /*void FixedUpdate()
     {
         if (playerRB != null)
         {
@@ -18,5 +18,5 @@ public class WindZoneForce : MonoBehaviour
                 ForceMode.Impulse
             );
         }
-    }
+    }*/
 }
