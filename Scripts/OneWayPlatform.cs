@@ -12,6 +12,7 @@ public class OneWayPlatform : MonoBehaviour
 
     bool playedCutscene = false;
     bool? wasAbove = null;   // only log on transitions, not every frame
+    bool wasOver = false;
 
     void Update()
     {
@@ -21,11 +22,38 @@ public class OneWayPlatform : MonoBehaviour
             return;
         }
 
-        bool above = player.transform.position.y >= transform.position.y;
+        Vector3 pp = player.transform.position;
+
+        // BUG FIX: the old check was `player.y >= transform.position.y` - a naive Y-only compare
+        // with NO horizontal test. Any platform BELOW the player (e.g. a floor further down)
+        // reported the player "ABOVE" and fired its cutscene, even when the player was nowhere
+        // near it. Now this platform only decides the player's mode when the player is actually
+        // HORIZONTALLY OVER its footprint, and "above" is measured against the platform's TOP
+        // surface (collider bounds), not its pivot.
+        Bounds b = platformCollider != null
+            ? platformCollider.bounds
+            : new Bounds(transform.position, Vector3.one);
+
+        bool over = pp.x >= b.min.x && pp.x <= b.max.x;
+
+        if (!over)
+        {
+            // Player is not over this platform -> it must not touch the player's mode/cutscene.
+            if (debugLogs && wasOver)
+                Debug.Log($"[OneWayPlatform] '{name}' player left footprint (playerX={pp.x:F2} " +
+                          $"footprintX=[{b.min.x:F2},{b.max.x:F2}]) -> not controlling player", this);
+            wasOver = false;
+            wasAbove = null;
+            return;
+        }
+        wasOver = true;
+
+        float topY = platformCollider != null ? b.max.y : transform.position.y;
+        bool above = pp.y >= topY;
 
         if (debugLogs && wasAbove != above)
             Debug.Log($"[OneWayPlatform] '{name}' player -> {(above ? "ABOVE" : "BELOW")} " +
-                      $"(playerY={player.transform.position.y:F2} platformY={transform.position.y:F2})", this);
+                      $"(playerY={pp.y:F2} platformTopY={topY:F2} overFootprint=true)", this);
         wasAbove = above;
 
         if (!above)
