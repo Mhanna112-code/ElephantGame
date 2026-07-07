@@ -45,6 +45,8 @@ public class ResetLever : MonoBehaviour
         if (!collision.collider.CompareTag("Bullet"))
             return;
 
+        Debug.Log($"[ResetLever] '{name}' hit by bullet -> resetting {objectsToReset.Count} objects", this);
+
         activated = true;
         StartCoroutine(ActivateLever());
     }
@@ -54,6 +56,8 @@ public class ResetLever : MonoBehaviour
         // Play cutscene
         if (cutsceneCamera != null)
             cutsceneCamera.PlayCutscene();
+        else
+            Debug.LogWarning($"[ResetLever] '{name}' cutsceneCamera not assigned", this);
 
         // Rotate lever down
         yield return RotateTo(downRotation);

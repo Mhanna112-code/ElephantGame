@@ -55,6 +55,7 @@ public class BoxSnapZone : MonoBehaviour
 
         if (rb.linearVelocity.magnitude <= velocityThreshold)
         {
+            Debug.Log($"[BoxSnapZone] '{name}' box settled in snap zone (vel={rb.linearVelocity.magnitude:F3} <= {velocityThreshold}) -> activate (raise platform)", this);
             Activate();
         }
     }
@@ -126,6 +127,7 @@ public class BoxSnapZone : MonoBehaviour
                     ForceMode.Impulse
                 );
 
+                Debug.Log($"[BoxSnapZone] '{name}' SPRING launched player (force={bounceForce})", this);
 
                 // Animate spring compression
                 StartCoroutine(SpringAnimation());

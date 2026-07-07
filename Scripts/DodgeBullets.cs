@@ -21,6 +21,9 @@ public class DodgeBullets : MonoBehaviour
     private Vector3 targetPosition;
     private bool dodging;
 
+    [Header("Diagnostics")]
+    public bool debugLogs = true;
+
     void Start()
     {
         homePosition = transform.position;
@@ -30,6 +33,10 @@ public class DodgeBullets : MonoBehaviour
 
         if (animator != null)
             animator.Play("Floating");
+
+        if (debugLogs)
+            Debug.Log($"[Toad] Start '{name}' home={homePosition} detectRadius={detectionRadius} " +
+                      $"dodgeDistance={dodgeDistance} animator={(animator != null)}", this);
     }
 
     void Update()
@@ -64,6 +71,8 @@ public class DodgeBullets : MonoBehaviour
 
                 targetPosition = homePosition + dodgeDir * dodgeDistance;
                 dodging = true;
+                if (debugLogs)
+                    Debug.Log($"[Toad] '{name}' DODGING bullet '{bullet.name}' -> dodgeDir={dodgeDir} target={targetPosition}", this);
                 break;
             }
         }

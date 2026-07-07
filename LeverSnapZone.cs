@@ -39,6 +39,7 @@ public class LeverSnapZone : MonoBehaviour
 
         if (other.transform == lever)
         {
+            Debug.Log($"[LeverSnapZone] '{name}' lever snapped in -> activating (raising door)", this);
             Activate();
         }
     }
