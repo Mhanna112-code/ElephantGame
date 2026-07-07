@@ -22,12 +22,19 @@ public class MovingPlatform : MonoBehaviour
 
     private BoxCollider box;
 
+    [Header("Diagnostics")]
+    public bool debugLogs = true;
+
     void Start()
     {
         box = GetComponent<BoxCollider>();
 
         ricochetEnabled = false;
         UpdateColor();
+
+        if (debugLogs)
+            Debug.Log($"[MovingPlatform] Start '{name}' speed={speed} detectDistance={detectDistance} " +
+                      $"wallLayer={wallLayer.value} ricochetEnabled={ricochetEnabled}", this);
     }
 
     void Update()
@@ -50,6 +57,9 @@ public class MovingPlatform : MonoBehaviour
         {
             direction *= -1;
 
+            if (debugLogs)
+                Debug.Log($"[MovingPlatform] '{name}' hit wall '{hit.collider.name}' -> reverse to dir={direction}", this);
+
             // Recalculate movement after reversing
             moveDir = Vector3.right * direction;
         }
@@ -61,6 +71,9 @@ public class MovingPlatform : MonoBehaviour
     {
         ricochetEnabled = !ricochetEnabled;
         UpdateColor();
+
+        if (debugLogs)
+            Debug.Log($"[MovingPlatform] '{name}' ToggleRicochet -> {(ricochetEnabled ? "GREEN (bounces)" : "RED (absorbs)")}", this);
     }
 
     void UpdateColor()

@@ -22,6 +22,9 @@ public class FlashingPlatform : MonoBehaviour
     [HideInInspector]
     public bool ricochetEnabled;
 
+    [Header("Diagnostics")]
+    public bool debugLogs = true;
+
     private float timer;
 
     void Start()
@@ -43,6 +46,8 @@ public class FlashingPlatform : MonoBehaviour
             timer = 0f;
             ricochetEnabled = !ricochetEnabled;
             UpdateColor();
+            if (debugLogs)
+                Debug.Log($"[FlashingPlatform] '{name}' -> {(ricochetEnabled ? "GREEN (bullets bounce)" : "RED (bullets absorbed)")}", this);
         }
     }
 

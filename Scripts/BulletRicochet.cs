@@ -13,19 +13,27 @@ public class BulletRicochet : MonoBehaviour
 
     private Rigidbody playerRb;
 
+    [Header("Diagnostics")]
+    public bool debugLogs = true;
+
     void Start()
     {
-        // ✅ FIX: always target the player directly (not collision object)
+        // always target the player directly (not collision object)
         GameObject player = GameObject.FindGameObjectWithTag("Player");
 
         if (player != null)
             playerRb = player.GetComponent<Rigidbody>();
+
+        if (debugLogs)
+            Debug.Log($"[Bullet] spawned playerRb={(playerRb != null)} maxBounces={maxBounces} " +
+                      $"bounceMult={bounceSpeedMultiplier}", this);
     }
 
     public void Init(Vector3 dir, float spd)
     {
         direction = dir.normalized;
         speed = spd;
+        if (debugLogs) Debug.Log($"[Bullet] Init dir={direction} speed={speed}", this);
     }
 
     void Update()
@@ -34,8 +42,7 @@ public class BulletRicochet : MonoBehaviour
 
         pos += direction * speed * Time.deltaTime;
 
-        // 🔒 KEEP GAME ON XY PLANE (DO NOT TOUCH Y)
-        // FIX: only lock Z, NOT Y (this was killing vertical recoil before)
+        // keep on the XY plane
         pos.z = 0f;
 
         transform.position = pos;
@@ -45,6 +52,7 @@ public class BulletRicochet : MonoBehaviour
     {
         if (bounceCount >= maxBounces)
         {
+            if (debugLogs) Debug.Log($"[Bullet] maxBounces ({maxBounces}) reached on '{collision.collider.name}' -> destroy", this);
             Destroy(gameObject);
             return;
         }
@@ -53,9 +61,7 @@ public class BulletRicochet : MonoBehaviour
         normal.z = 0f;
         normal.Normalize();
 
-        // ============================
-        // 🔥 PLATFORM LOGIC CHECK
-        // ============================
+        // Platform ricochet gate: red platform absorbs the bullet, green lets it bounce.
         MovingPlatform platform =
             collision.collider.GetComponent<MovingPlatform>();
         FlashingPlatform platform2 =
@@ -63,39 +69,31 @@ public class BulletRicochet : MonoBehaviour
 
         if (platform != null)
         {
-            // ❌ RED PLATFORM → destroy bullet
             if (!platform.ricochetEnabled)
             {
+                if (debugLogs) Debug.Log($"[Bullet] hit RED MovingPlatform '{platform.name}' (ricochet off) -> no bounce", this);
                 return;
             }
-
-            // ✅ GREEN PLATFORM → allow bounce
+            if (debugLogs) Debug.Log($"[Bullet] hit GREEN MovingPlatform '{platform.name}' -> bounce allowed", this);
         }
         if (platform2 != null)
         {
-            // ❌ RED PLATFORM → destroy bullet
             if (!platform2.ricochetEnabled)
             {
+                if (debugLogs) Debug.Log($"[Bullet] hit RED FlashingPlatform '{platform2.name}' (ricochet off) -> no bounce", this);
                 return;
             }
-
-            // ✅ GREEN PLATFORM → allow bounce
+            if (debugLogs) Debug.Log($"[Bullet] hit GREEN FlashingPlatform '{platform2.name}' -> bounce allowed", this);
         }
 
-
-
-        // ============================
-        // REFLECT BULLET
-        // ============================
+        // Reflect
         direction = Vector3.Reflect(direction, normal);
         direction.z = 0f;
         direction.Normalize();
 
         speed *= bounceSpeedMultiplier;
 
-        // ============================
-        // PLAYER RECOIL (first hit only)
-        // ============================
+        // Player recoil (first hit only)
         if (playerRb != null && bounceCount == 0)
         {
             Vector3 recoilDir = normal;
@@ -107,13 +105,21 @@ public class BulletRicochet : MonoBehaviour
             recoilDir.Normalize();
 
             playerRb.AddForce(recoilDir * speed * 0.8f, ForceMode.Impulse);
+
+            if (debugLogs)
+                Debug.Log($"[Bullet] first-hit RECOIL to player: dir={recoilDir} force={recoilDir * speed * 0.8f}", this);
         }
 
         bounceCount++;
+
+        if (debugLogs)
+            Debug.Log($"[Bullet] bounced off '{collision.collider.name}' normal={normal} -> " +
+                      $"newDir={direction} speed={speed:F2} bounce {bounceCount}/{maxBounces}", this);
     }
 
     void OnBecameInvisible()
     {
+        if (debugLogs) Debug.Log("[Bullet] off-screen -> destroy", this);
         Destroy(gameObject);
     }
 }
