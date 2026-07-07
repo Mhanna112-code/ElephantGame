@@ -15,6 +15,24 @@ public class LeverSnapZone : MonoBehaviour
 
     private bool activated = false;
 
+    private Renderer[] doorRenderers;
+
+    void Start()
+    {
+        if (door != null)
+        {
+            // Get all renderers, even if the object is inactive
+            doorRenderers = door.GetComponentsInChildren<Renderer>(true);
+
+            // Hide the door
+            foreach (Renderer r in doorRenderers)
+                r.enabled = false;
+
+            // Optional: if the entire GameObject starts disabled
+            // door.gameObject.SetActive(false);
+        }
+    }
+
     void OnTriggerEnter(Collider other)
     {
         if (activated) return;
@@ -29,7 +47,7 @@ public class LeverSnapZone : MonoBehaviour
     {
         activated = true;
 
-        // 🧱 LOCK LEVER IN PLACE (NO MORE MOVEMENT)
+        // Lock lever in place
         Rigidbody rb = lever.GetComponent<Rigidbody>();
         if (rb != null)
         {
@@ -38,9 +56,16 @@ public class LeverSnapZone : MonoBehaviour
             rb.constraints = RigidbodyConstraints.FreezeAll;
         }
 
-        // 🚪 START DOOR RISE
         if (door != null)
         {
+            // If the GameObject was disabled
+            door.gameObject.SetActive(true);
+
+            // Make the door visible
+            foreach (Renderer r in doorRenderers)
+                r.enabled = true;
+
+            // Raise the door
             StartCoroutine(RaiseDoor());
         }
     }

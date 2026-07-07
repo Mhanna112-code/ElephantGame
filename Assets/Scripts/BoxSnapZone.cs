@@ -13,13 +13,20 @@ public class BoxSnapZone : MonoBehaviour
     [Header("Rise Settings")]
     public float riseSpeed = 3f;
 
+    [Header("Spring Settings")]
+    public float bounceForce = 12f;
+    public float springCompression = 0.3f;
+    public float springSpeed = 10f;
+
     [Header("Snap Settings")]
     public float velocityThreshold = 0.05f;
 
     private Rigidbody rb;
     private bool activated = false;
+    private bool canBounce = false;
 
     private Renderer[] boxRenderers;
+
 
     void Start()
     {
@@ -27,14 +34,16 @@ public class BoxSnapZone : MonoBehaviour
 
         if (risingBox != null)
         {
-            // Cache all renderers (works even if the box has children)
-            boxRenderers = risingBox.GetComponentsInChildren<Renderer>();
+            boxRenderers = risingBox.GetComponentsInChildren<Renderer>(true);
 
-            // Hide the box
+            // Hide platform initially
             foreach (Renderer r in boxRenderers)
                 r.enabled = false;
+
+            risingBox.gameObject.SetActive(false);
         }
     }
+
 
     void OnCollisionStay(Collision collision)
     {
@@ -50,24 +59,28 @@ public class BoxSnapZone : MonoBehaviour
         }
     }
 
+
     void Activate()
     {
         activated = true;
 
-        // Lock the puzzle box in place
+        // Lock snapped box
         rb.linearVelocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
         rb.constraints = RigidbodyConstraints.FreezeAll;
 
+
         if (risingBox != null)
         {
-            // Make it visible before raising
+            risingBox.gameObject.SetActive(true);
+
             foreach (Renderer r in boxRenderers)
                 r.enabled = true;
 
             StartCoroutine(RaiseBox());
         }
     }
+
 
     IEnumerator RaiseBox()
     {
@@ -83,5 +96,76 @@ public class BoxSnapZone : MonoBehaviour
         }
 
         risingBox.position = targetPosition;
+
+        canBounce = true;
+    }
+
+
+    // Spring platform effect
+    void OnCollisionEnter(Collision collision)
+    {
+        if (!canBounce)
+            return;
+
+
+        if (collision.gameObject.CompareTag("Player"))
+        {
+            Rigidbody playerRb = collision.gameObject.GetComponent<Rigidbody>();
+
+            if (playerRb != null)
+            {
+                // Remove downward velocity
+                Vector3 velocity = playerRb.linearVelocity;
+                velocity.y = 0;
+                playerRb.linearVelocity = velocity;
+
+
+                // Launch player
+                playerRb.AddForce(
+                    Vector3.up * bounceForce,
+                    ForceMode.Impulse
+                );
+
+
+                // Animate spring compression
+                StartCoroutine(SpringAnimation());
+            }
+        }
+    }
+
+
+    IEnumerator SpringAnimation()
+    {
+        Vector3 original = targetPosition;
+        Vector3 compressed = original - Vector3.up * springCompression;
+
+
+        // Compress down
+        while (Vector3.Distance(risingBox.position, compressed) > 0.01f)
+        {
+            risingBox.position = Vector3.MoveTowards(
+                risingBox.position,
+                compressed,
+                springSpeed * Time.deltaTime
+            );
+
+            yield return null;
+        }
+
+
+        // Expand back
+        while (Vector3.Distance(risingBox.position, original) > 0.01f)
+        {
+            risingBox.position = Vector3.MoveTowards(
+                risingBox.position,
+                original,
+                springSpeed * Time.deltaTime
+            );
+
+            yield return null;
+        }
+
+
+        risingBox.position = original;
     }
 }

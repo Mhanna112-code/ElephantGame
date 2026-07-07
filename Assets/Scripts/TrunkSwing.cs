@@ -57,7 +57,6 @@ public class TrunkSwing : MonoBehaviour
 
         // Null-safe: no PlayerController -> default to the flat-plane (BELOW) aim, never NRE.
         bool isAbovePlatform = playerController != null && playerController.IsAbovePlatform;
-
         Vector3 targetPos;
         string branch;
 

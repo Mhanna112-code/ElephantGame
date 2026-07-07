@@ -13,7 +13,7 @@ public class CutsceneCamera : MonoBehaviour
 
     public void PlayCutscene()
     {
-        StartCoroutine(Play());
+        //StartCoroutine(Play());
     }
 
     IEnumerator Play()
