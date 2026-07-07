@@ -87,6 +87,7 @@ public class PlayerController : MonoBehaviour
 void Shoot()
 {
     if (canShoot) {
+        Debug.Log("shooting");
         Vector3 shootDir = GetMouseDirection();
 
         GameObject bullet = Instantiate(bulletPrefab, shootPoint.position, Quaternion.identity);
