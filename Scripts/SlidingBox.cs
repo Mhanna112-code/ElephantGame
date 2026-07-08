@@ -129,6 +129,12 @@ public class SlidingBox : MonoBehaviour
         if (c.CompareTag("SlidingBox"))
             return true;
 
+        // Walls and the rising door are solid barriers the box must not pass. The Door in the scene is
+        // currently Untagged, so ALSO tag it (and any wall) "Wall" for this to catch it. If you would rather
+        // not retag, add its layer to obstacleLayers below instead.
+        if (c.CompareTag("Wall"))
+            return true;
+
         if (((1 << c.gameObject.layer) & obstacleLayers) != 0)
             return true;
 
