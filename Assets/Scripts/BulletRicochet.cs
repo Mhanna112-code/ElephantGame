@@ -43,6 +43,13 @@ public class BulletRicochet : MonoBehaviour
 
     void OnCollisionEnter(Collision collision)
     {
+        // Destroy bullet when hitting lever
+        if (collision.collider.CompareTag("lever"))
+        {
+            Destroy(gameObject);
+            return;
+        }
+
         if (bounceCount >= maxBounces)
         {
             Destroy(gameObject);
@@ -58,31 +65,27 @@ public class BulletRicochet : MonoBehaviour
         // ============================
         MovingPlatform platform =
             collision.collider.GetComponent<MovingPlatform>();
+
         FlashingPlatform platform2 =
             collision.collider.GetComponent<FlashingPlatform>();
 
         if (platform != null)
         {
-            // ❌ RED PLATFORM → destroy bullet
             if (!platform.ricochetEnabled)
             {
+                Destroy(gameObject);
                 return;
             }
-
-            // ✅ GREEN PLATFORM → allow bounce
         }
+
         if (platform2 != null)
         {
-            // ❌ RED PLATFORM → destroy bullet
             if (!platform2.ricochetEnabled)
             {
+                Destroy(gameObject);
                 return;
             }
-
-            // ✅ GREEN PLATFORM → allow bounce
         }
-
-
 
         // ============================
         // REFLECT BULLET

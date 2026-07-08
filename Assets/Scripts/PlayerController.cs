@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 
 public class PlayerController : MonoBehaviour
 {
@@ -21,12 +22,16 @@ public class PlayerController : MonoBehaviour
 
     Rigidbody rb;
     bool isGrounded;
-
     bool canShoot = true;
+
+    public bool IsAbovePlatform { get; private set; }
+
+    private bool isClimbing;
 
     void Start()
     {
         rb = GetComponent<Rigidbody>();
+
         Collider bulletCol = GetComponent<Collider>();
         GameObject player = GameObject.FindGameObjectWithTag("Player");
 
@@ -40,11 +45,8 @@ public class PlayerController : MonoBehaviour
             }
         }
     }
-
     void Update()
     {
-        Debug.Log("IsAbovePlatform" + IsAbovePlatform);
-        Debug.Log(rb.constraints);
         CheckGround();
         Move();
 
@@ -61,10 +63,8 @@ public class PlayerController : MonoBehaviour
     void Move()
     {
         float x = Input.GetAxisRaw("Horizontal");
-
         float z = 0f;
 
-        // Only allow Z movement when it has been enabled
         if ((rb.constraints & RigidbodyConstraints.FreezePositionZ) == 0)
         {
             z = Input.GetAxisRaw("Vertical");
@@ -79,15 +79,23 @@ public class PlayerController : MonoBehaviour
 
     void Jump()
     {
+        if (isClimbing)
+            return;
+
         if (!isGrounded) return;
 
         rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
         isGrounded = false;
     }
 
-void Shoot()
-{
-    if (canShoot) {
+    void Shoot()
+    {
+        if (isClimbing)
+            return;
+
+        if (!canShoot)
+            return;
+
         Debug.Log("shooting");
         Vector3 shootDir = GetMouseDirection();
 
@@ -104,14 +112,13 @@ void Shoot()
             Debug.LogError("BulletRicochet missing on prefab!");
         }
     }
-}
+
     [SerializeField] private Transform firePoint;
 
     Vector3 GetMouseDirection()
     {
         Ray ray = cam.ScreenPointToRay(Input.mousePosition);
 
-        // Plane parallel to the XY plane at the player's Z position
         Plane plane = new Plane(Vector3.forward, shootPoint.position);
 
         if (plane.Raycast(ray, out float enter))
@@ -121,7 +128,6 @@ void Shoot()
             Vector3 dir = mouseWorld - shootPoint.position;
             dir.z = 0f;
 
-            // Flip because camera is rotated -90° around Y
             return dir.normalized;
         }
 
@@ -132,8 +138,6 @@ void Shoot()
     {
         isGrounded = Physics.Raycast(transform.position, Vector3.down, groundCheckDistance, groundLayer);
     }
-
-    public bool IsAbovePlatform { get; private set; }
 
     public void EnableZMovement()
     {
@@ -153,6 +157,7 @@ void Shoot()
         pos.z = 0f;
         transform.position = pos;
     }
+
     public void EnableShooting()
     {
         canShoot = true;
@@ -161,5 +166,10 @@ void Shoot()
     public void DisableShooting()
     {
         canShoot = false;
+    }
+
+    public void SetClimbing(bool climbing)
+    {
+        isClimbing = climbing;
     }
 }

@@ -3,20 +3,24 @@ using UnityEngine;
 public class WindZoneForce : MonoBehaviour
 {
     public Vector3 windDirection = Vector3.up;
-    public float windStrength = 20f;
+    public float windStrength =100f;
 
     public Rigidbody playerRB;
+    public PlayerController player;
+    public Collider platformCollider;
 
-    /*void FixedUpdate()
+
+    void FixedUpdate()
     {
-        if (playerRB != null)
+        
+        if (playerRB != null && player.transform.position.y > transform.position.y)
         {
             Debug.Log("Adding upward wind force");
 
             playerRB.AddForce(
-                Vector3.up * 500f,
+                Vector3.up * windStrength,
                 ForceMode.Impulse
             );
         }
-    }*/
+    }
 }
