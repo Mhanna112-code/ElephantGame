@@ -11,12 +11,15 @@ public class TrunkClimb : MonoBehaviour
     public float grabDistance = 3f;
     public KeyCode grabKey = KeyCode.E;
 
+    [Header("Range")]
+    [Tooltip("Max distance the player can be from the grab point while anchored. Movement is free in every direction up to this range - only distance is capped.")]
+    public float maxGrabRange = 4f;
+
     private Transform currentGrabPoint;
     private TrunkSwing trunkSwing;
     private Rigidbody rb;
 
     private bool isGrabbing;
-    private float ropeLength;
 
     void Start()
     {
@@ -39,42 +42,28 @@ public class TrunkClimb : MonoBehaviour
             Release();
         }
     }
-    [Header("Swing Physics")]
-    public float ropeStrength = 2f;
-    public float swingDamping = 0.15f;
 
     void FixedUpdate()
     {
-        if (!isGrabbing || currentGrabPoint == null || trunkBase == null)
+        if (!isGrabbing || currentGrabPoint == null || rb == null)
             return;
 
         Vector3 anchor = currentGrabPoint.position;
-        Vector3 trunkPos = trunkBase.position;
+        Vector3 offset = rb.position - anchor;
+        float distance = offset.magnitude;
 
-        Vector3 ropeVector = trunkPos - anchor;
-        float distance = ropeVector.magnitude;
-
-        Vector3 direction = ropeVector.normalized;
-
-
-        // Rope is stretched
-        if (distance > ropeLength)
+        if (distance > maxGrabRange)
         {
-            float stretch = distance - ropeLength;
+            // Hard clamp onto the max-range sphere - free movement in every
+            // direction, this only ever stops the player from getting farther
+            // from the anchor than maxGrabRange. No spring force, no jitter.
+            Vector3 outward = offset.normalized;
+            rb.position = anchor + outward * maxGrabRange;
 
-            // Stronger pull back toward grab point
-            rb.AddForce(
-                -direction * stretch * ropeStrength,
-                ForceMode.Force
-            );
-
-
-            // Remove only outward velocity
-            float outwardVelocity = Vector3.Dot(rb.linearVelocity, direction);
-
-            if (outwardVelocity > 0)
+            float outwardSpeed = Vector3.Dot(rb.linearVelocity, outward);
+            if (outwardSpeed > 0)
             {
-                rb.linearVelocity -= direction * outwardVelocity * swingDamping;
+                rb.linearVelocity -= outward * outwardSpeed;
             }
         }
     }
@@ -147,16 +136,18 @@ public class TrunkClimb : MonoBehaviour
             trunkSwing.currentGrabPoint = point;
         }
 
-        // Use the current distance between trunk base and grab point as the rope length
-        if (trunkBase != null)
-        {
-            ropeLength = Vector3.Distance(trunkBase.position, point.position) + 0.5f;
-        }
-
         // Stop player input fighting the grab
         if (playerController != null)
         {
             playerController.SetClimbing(true);
+        }
+
+        // No gravity while anchored - PlayerController.Move() takes over
+        // full XYZ control so the player can move in any direction.
+        if (rb != null)
+        {
+            rb.useGravity = false;
+            rb.linearVelocity = Vector3.zero;
         }
 
         Debug.Log("Trunk grabbed: " + point.name);
@@ -176,6 +167,11 @@ public class TrunkClimb : MonoBehaviour
         if (playerController != null)
         {
             playerController.SetClimbing(false);
+        }
+
+        if (rb != null)
+        {
+            rb.useGravity = true;
         }
 
         Debug.Log("Trunk released");

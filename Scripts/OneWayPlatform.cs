@@ -13,34 +13,42 @@ public class OneWayPlatform : MonoBehaviour
 
     void Update()
     {
-        if (player.transform.position.y < transform.position.y || player.transform.position.y > highPlatform.position.y)
+        float playerY = player.transform.position.y;
+
+        if (playerY > highPlatform.position.y)
         {
-            if (player.transform.position.y > highPlatform.position.y)
+            // Player has finished the climb and is above the high-rise platform
+            if (!playedResetCutscene)
             {
-                if (!playedResetCutscene) {
-                    cutsceneCam.ResetCameraView();
-                    playedResetCutscene = true;
+                cutsceneCam.ResetCameraView();
+                playedResetCutscene = true;
             }
 
-            }
+            platformCollider.enabled = true; // keep the floor solid so bullets can still ricochet
+            player.DisableZMovement();       // camera is back to the side view here, so trunk aim
+                                              // must use the forward plane, not the top-down one
+            player.EnableShooting();
+        }
+        else if (playerY < transform.position.y)
+        {
             // Player is underneath the platform
             platformCollider.enabled = false;
 
             player.DisableZMovement();
             player.EnableShooting();
         }
-        else if (player.transform.position.y < highPlatform.position.y)
+        else
         {
-            if (!playedCutscene) {
+            // Player is inside the climbing shaft, between the platform base and the high platform
+            if (!playedCutscene)
+            {
                 cutsceneCam.PlayCutscene();
                 playedCutscene = true;
             }
-            Debug.Log("above platform");
-            // Player is above the platform
+
             platformCollider.enabled = true;
             player.EnableZMovement();
             player.DisableShooting();
-
         }
     }
 }

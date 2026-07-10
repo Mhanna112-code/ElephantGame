@@ -63,6 +63,22 @@ public class PlayerController : MonoBehaviour
     void Move()
     {
         float x = Input.GetAxisRaw("Horizontal");
+
+        if (isClimbing)
+        {
+            // Anchored to a grab point: gravity is off (see TrunkClimb.Grab),
+            // so drive full X/Y movement directly instead of X/Z.
+            float yClimb = Input.GetAxisRaw("Vertical");
+
+            Vector3 climbVel = rb.linearVelocity;
+            climbVel.x = x * moveSpeed;
+            climbVel.y = yClimb * moveSpeed;
+            climbVel.z = 0f;
+
+            rb.linearVelocity = climbVel;
+            return;
+        }
+
         float z = 0f;
 
         if ((rb.constraints & RigidbodyConstraints.FreezePositionZ) == 0)

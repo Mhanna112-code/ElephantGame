@@ -9,11 +9,12 @@ public class WindZoneForce : MonoBehaviour
     public PlayerController player;
     public Collider platformCollider;
 
+    public Transform highRisePlatform;
 
     void FixedUpdate()
     {
         
-        if (playerRB != null && player.transform.position.y > transform.position.y)
+        if (playerRB != null && player.transform.position.y > transform.position.y && player.transform.position.y < highRisePlatform.position.y)
         {
             Debug.Log("Adding upward wind force");
 

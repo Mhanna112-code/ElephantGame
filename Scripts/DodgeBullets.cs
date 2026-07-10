@@ -15,7 +15,7 @@ public class DodgeBullets : MonoBehaviour
 
     [Header("Dodging")]
     public float dodgeDistance = 2f;
-    public float dodgeSpeed = 5f;
+    public float dodgeSpeed = 20f;
 
     private Vector3 homePosition;
     private Vector3 targetPosition;
@@ -42,30 +42,53 @@ public class DodgeBullets : MonoBehaviour
             bulletLayer
         );
 
+        Debug.Log($"Detected bullets: {bullets.Length}");
+
         foreach (Collider bullet in bullets)
         {
+            Debug.Log(
+                $"Bullet detected: {bullet.name} | Position: {bullet.transform.position}"
+            );
+
             Rigidbody rb = bullet.GetComponent<Rigidbody>();
 
             if (rb == null)
+            {
+                Debug.Log($"Bullet {bullet.name} has no Rigidbody!");
                 continue;
+            }
+
+            Debug.Log(
+                $"Bullet Velocity: {rb.linearVelocity} | Speed: {rb.linearVelocity.magnitude}"
+            );
 
             Vector3 toEnemy = transform.position - bullet.transform.position;
 
+            float directionCheck = Vector3.Dot(
+                rb.linearVelocity.normalized,
+                toEnemy.normalized
+            );
+
+            Debug.Log(
+                $"Direction check for {bullet.name}: {directionCheck}"
+            );
+
             // Bullet heading toward enemy?
-            if (Vector3.Dot(rb.linearVelocity.normalized, toEnemy.normalized) > 0.8f)
-            {
-                Vector3 dodgeDir = Vector3.Cross(
-                    rb.linearVelocity.normalized,
-                    Vector3.forward
-                ).normalized;
+            Debug.Log($"DODGING BULLET: {bullet.name}");
 
-                if (Random.value > 0.5f)
-                    dodgeDir = -dodgeDir;
+            Vector3 dodgeDir = transform.position - bullet.transform.position;
 
-                targetPosition = homePosition + dodgeDir * dodgeDistance;
-                dodging = true;
-                break;
-            }
+            // Keep movement on XY plane
+            dodgeDir.z = 0;
+
+            dodgeDir.Normalize();
+
+            targetPosition = homePosition + dodgeDir * dodgeDistance;
+
+            Debug.Log($"Dodge Direction: {dodgeDir}");
+            Debug.Log($"Target Position: {targetPosition}");
+
+            dodging = true;
         }
 
         if (dodging)
@@ -78,7 +101,6 @@ public class DodgeBullets : MonoBehaviour
         }
         else
         {
-            // Hover left/right on the X axis
             Vector3 hoverPos = homePosition;
             hoverPos.x += Mathf.Sin(Time.time * hoverSpeed) * hoverDistance;
 
