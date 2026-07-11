@@ -60,8 +60,8 @@ public class PlayerController : MonoBehaviour
 
         Move();
 
-        if (Input.GetKeyDown(KeyCode.Space))
-            Jump();
+        //if (Input.GetKeyDown(KeyCode.Space))
+          //  Jump();
 
         if (Input.GetMouseButtonDown(0))
         {
@@ -82,15 +82,16 @@ public class PlayerController : MonoBehaviour
         }
 
         // Rotate player left/right
-       if (x > 0)
-    {
-        playerModel.localRotation = Quaternion.Euler(0, 0, 0);
-    }
-    else if (x < 0)
-    {
-        playerModel.localRotation = Quaternion.Euler(0, 180, 0);
-    }
-
+        if (x > 0)
+        {
+            // Facing right
+            playerModel.localRotation = Quaternion.Euler(0, 90, 0);
+        }
+        else if (x < 0)
+        {
+            // Facing left
+            playerModel.localRotation = Quaternion.Euler(0, -90, 0);
+        }
 
         if (isClimbing)
         {
