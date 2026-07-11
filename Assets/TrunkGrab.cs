@@ -55,6 +55,7 @@ public class TrunkGrab : MonoBehaviour
         if(joint != null)
         {
             Destroy(joint);
+            return;
         }
     }
 }
