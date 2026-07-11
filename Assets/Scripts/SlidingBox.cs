@@ -11,6 +11,11 @@ public class SlidingBox : MonoBehaviour
     public float detectDistance = 0.05f;
     public LayerMask obstacleLayers;
 
+    [Header("Floor Edge Safety (issue #12)")]
+    [Tooltip("How far below the box's bottom to probe for floor. If nothing is under the box's next " +
+             "position, it stops instead of sliding off the floor and away from the building.")]
+    public float floorProbeDistance = 0.6f;
+
     [Header("Debug")]
     public bool debugLogs = true;
 
@@ -103,6 +108,18 @@ public class SlidingBox : MonoBehaviour
             Debug.Log($"[SlidingBox] '{name}' sliding dir={slideDirection} pos={transform.position} sees:{seen}", this);
         }
 
+        // FLOOR-EDGE SAFETY (issue #12: "boxes ... keep sliding off the floor and away from the building").
+        // Rails only stop a box where a rail exists; pushed toward an OPEN edge it slides into the void.
+        // Probe straight down from where the box WOULD be. The ray starts inside our own box, so it does not
+        // report our collider - it reports the floor beneath. No floor there -> stop instead of falling off.
+        float halfHeight = boxCol.bounds.extents.y;
+        if (!Physics.Raycast(nextCenter, Vector3.down, out RaycastHit floorHit,
+                             halfHeight + floorProbeDistance, ~0, QueryTriggerInteraction.Ignore))
+        {
+            StopSliding("no floor under next position -> stopping so the box does not slide off the building");
+            return;
+        }
+
         transform.position += move;
     }
 
@@ -129,6 +146,11 @@ public class SlidingBox : MonoBehaviour
         if (c.CompareTag("SlidingBox"))
             return true;
 
+        // Walls and the rising door are solid barriers too (the Door is Untagged in the scene - tag it
+        // "Wall", or add its layer to obstacleLayers, for this to catch it).
+        if (c.CompareTag("Wall"))
+            return true;
+
         if (((1 << c.gameObject.layer) & obstacleLayers) != 0)
             return true;
 
@@ -139,13 +161,16 @@ public class SlidingBox : MonoBehaviour
         if (sliding)
             return;
 
-        // 🚫 CRITICAL: Ignore anything that is NOT the player
+        // Ignore anything that is NOT the player. Detect the player by its PlayerController component
+        // rather than the "Player" TAG: in the current scene the player object is mis-tagged "Climbable"
+        // (the boss-update scene rewrite dropped the Player tag), so a CompareTag("Player") check rejects
+        // it and the box can never start sliding. Component detection is tag-proof.
         Rigidbody otherRb = collision.rigidbody;
 
         if (otherRb == null)
             return;
 
-        if (!otherRb.CompareTag("Player"))
+        if (otherRb.GetComponent<PlayerController>() == null)
             return;
 
         // 🚫 Ignore trunk bones / child colliders already included in physics
