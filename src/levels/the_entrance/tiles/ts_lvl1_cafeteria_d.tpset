@@ -1,0 +1,168 @@
+{
+	"textures": [
+		{
+			"image": "ts_lvl1_cafeteria_d.png",
+			"size": {
+				"w": 480,
+				"h": 148
+			},
+			"sprites": [
+				{
+					"filename": "counter.png",
+					"region": {
+						"x": 8,
+						"y": 8,
+						"w": 113,
+						"h": 95.5
+					},
+					"margin": {
+						"x": 0,
+						"y": 0,
+						"w": 0,
+						"h": 0
+					}
+				},
+				{
+					"filename": "palm_2.png",
+					"region": {
+						"x": 137,
+						"y": 8,
+						"w": 77,
+						"h": 33.5
+					},
+					"margin": {
+						"x": 0,
+						"y": 0,
+						"w": 0,
+						"h": 0
+					}
+				},
+				{
+					"filename": "palm_1.png",
+					"region": {
+						"x": 230,
+						"y": 8,
+						"w": 61,
+						"h": 84
+					},
+					"margin": {
+						"x": 0,
+						"y": 0,
+						"w": 0,
+						"h": 0
+					}
+				},
+				{
+					"filename": "table_1.png",
+					"region": {
+						"x": 137,
+						"y": 57.5,
+						"w": 45,
+						"h": 37
+					},
+					"margin": {
+						"x": 0,
+						"y": 0,
+						"w": 0,
+						"h": 0
+					}
+				},
+				{
+					"filename": "table_2.png",
+					"region": {
+						"x": 307,
+						"y": 8,
+						"w": 45,
+						"h": 37
+					},
+					"margin": {
+						"x": 0,
+						"y": 0,
+						"w": 0,
+						"h": 0
+					}
+				},
+				{
+					"filename": "lounger_3.png",
+					"region": {
+						"x": 368,
+						"y": 8,
+						"w": 45,
+						"h": 24
+					},
+					"margin": {
+						"x": 0,
+						"y": 0,
+						"w": 0,
+						"h": 0
+					}
+				},
+				{
+					"filename": "ice_cream.png",
+					"region": {
+						"x": 429,
+						"y": 8,
+						"w": 43,
+						"h": 48
+					},
+					"margin": {
+						"x": 0,
+						"y": 0,
+						"w": 0,
+						"h": 0
+					}
+				},
+				{
+					"filename": "vending_machine_1.png",
+					"region": {
+						"x": 368,
+						"y": 48,
+						"w": 33,
+						"h": 54.5
+					},
+					"margin": {
+						"x": 0,
+						"y": 0,
+						"w": 0,
+						"h": 0
+					}
+				},
+				{
+					"filename": "lounger_1.png",
+					"region": {
+						"x": 307,
+						"y": 72,
+						"w": 26.5,
+						"h": 31.5
+					},
+					"margin": {
+						"x": 0,
+						"y": 0,
+						"w": 0,
+						"h": 0
+					}
+				},
+				{
+					"filename": "lounger_2.png",
+					"region": {
+						"x": 198,
+						"y": 108,
+						"w": 26.5,
+						"h": 31.5
+					},
+					"margin": {
+						"x": 0,
+						"y": 0,
+						"w": 0,
+						"h": 0
+					}
+				}
+			]
+		}
+	],
+	"meta": {
+		"app": "http://free-tex-packer.com",
+		"version": "0.6.7",
+		"format": "RGBA8888",
+	}
+}

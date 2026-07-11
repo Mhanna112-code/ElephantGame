@@ -1,0 +1,138 @@
+{
+	"textures": [
+		{
+			"image": "ts_lvl1_entrance_w.png",
+			"size": {
+				"w": 224,
+				"h": 64
+			},
+			"sprites": [
+				{
+					"filename": "wall_tile_7.png",
+					"region": {
+						"x": 0,
+						"y": 0,
+						"w": 16,
+						"h": 40
+					},
+					"margin": {
+						"x": 0,
+						"y": 0,
+						"w": 0,
+						"h": 0
+					}
+				},
+				{
+					"filename": "wall_tile_8.png",
+					"region": {
+						"x": 16,
+						"y": 0,
+						"w": 16,
+						"h": 48
+					},
+					"margin": {
+						"x": 0,
+						"y": 0,
+						"w": 0,
+						"h": 0
+					}
+				},
+				{
+					"filename": "wall_tile_1.png",
+					"region": {
+						"x": 32,
+						"y": 0,
+						"w": 48,
+						"h": 56
+					},
+					"margin": {
+						"x": 0,
+						"y": 0,
+						"w": 0,
+						"h": 0
+					}
+				},
+				{
+					"filename": "wall_tile_2.png",
+					"region": {
+						"x": 80,
+						"y": 0,
+						"w": 48,
+						"h": 56
+					},
+					"margin": {
+						"x": 0,
+						"y": 0,
+						"w": 0,
+						"h": 0
+					}
+				},
+				{
+					"filename": "wall_tile_3.png",
+					"region": {
+						"x": 128,
+						"y": 0,
+						"w": 48,
+						"h": 56
+					},
+					"margin": {
+						"x": 0,
+						"y": 0,
+						"w": 0,
+						"h": 0
+					}
+				},
+				{
+					"filename": "wall_tile_4.png",
+					"region": {
+						"x": 176,
+						"y": 0,
+						"w": 16,
+						"h": 56
+					},
+					"margin": {
+						"x": 0,
+						"y": 0,
+						"w": 0,
+						"h": 0
+					}
+				},
+				{
+					"filename": "wall_tile_5.png",
+					"region": {
+						"x": 192,
+						"y": 0,
+						"w": 16,
+						"h": 64
+					},
+					"margin": {
+						"x": 0,
+						"y": 0,
+						"w": 0,
+						"h": 0
+					}
+				},
+				{
+					"filename": "wall_tile_6.png",
+					"region": {
+						"x": 208,
+						"y": 0,
+						"w": 16,
+						"h": 64
+					},
+					"margin": {
+						"x": 0,
+						"y": 0,
+						"w": 0,
+						"h": 0
+					}
+				}
+			]
+		}
+	],
+	"meta": {
+		"app": "http://free-tex-packer.com",
+		"version": "0.6.7",
+		"format": "RGBA8888",
+	}
+}
