@@ -11,7 +11,20 @@ public class BulletRicochet : MonoBehaviour
 
     private int bounceCount;
 
+    // ROOT CAUSE (issue #16): the PLAYER object has a stray BulletRicochet component. Its OnBecameInvisible
+    // called Destroy(gameObject), so when the player scrolled off camera it destroyed the PLAYER (then
+    // HighRisePlatform crashed on the dead player). A real bullet is always fired via Init(); anything that
+    // was never Init'd (like the one on the player) is not a bullet, so it now stays completely inert.
+    private bool initialized;
+
     private Rigidbody playerRb;
+
+    void Awake()
+    {
+        if (GetComponent<PlayerController>() != null)
+            Debug.LogWarning($"[Bullet] BulletRicochet is attached to the PLAYER ('{name}'); it will stay inert, " +
+                             $"but you should remove this stray component from the player in the scene (issue #16).", this);
+    }
 
     void Start()
     {
@@ -26,10 +39,14 @@ public class BulletRicochet : MonoBehaviour
     {
         direction = dir.normalized;
         speed = spd;
+        initialized = true;
     }
 
     void Update()
     {
+        if (!initialized)
+            return;
+
         Vector3 pos = transform.position;
 
         pos += direction * speed * Time.deltaTime;
@@ -43,6 +60,9 @@ public class BulletRicochet : MonoBehaviour
 
     void OnCollisionEnter(Collision collision)
     {
+        if (!initialized)
+            return;
+
         // Destroy bullet when hitting lever
         if (collision.collider.CompareTag("lever"))
         {
@@ -117,6 +137,11 @@ public class BulletRicochet : MonoBehaviour
 
     void OnBecameInvisible()
     {
+        // Only a real, fired bullet cleans itself up off-screen. Without this guard the stray BulletRicochet
+        // on the player would Destroy the PLAYER the moment it left the camera view (issue #16).
+        if (!initialized)
+            return;
+
         Destroy(gameObject);
     }
 }
