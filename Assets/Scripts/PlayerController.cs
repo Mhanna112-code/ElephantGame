@@ -9,8 +9,7 @@ public class PlayerController : MonoBehaviour
 
     [Header("Ground Check")]
     public float groundCheckDistance = 0.3f;
-    public LayerMask groundLayer;
-
+    public LayerMask groundLayer = (1 << 0) | (1 << 9); 
     [Header("Shooting")]
     public GameObject bulletPrefab;
     public Transform shootPoint;
@@ -19,6 +18,9 @@ public class PlayerController : MonoBehaviour
     [Header("Mouse Aim")]
     public Camera cam;
     public float aimDistance = 50f;
+
+    [Header("Animation")]
+    public Animator animator;
 
     Rigidbody rb;
     bool isGrounded;
@@ -45,9 +47,17 @@ public class PlayerController : MonoBehaviour
             }
         }
     }
+
     void Update()
     {
         CheckGround();
+
+        // Update animator
+        if (animator != null)
+        {
+            animator.SetBool("IsGrounded", isGrounded);
+        }
+
         Move();
 
         if (Input.GetKeyDown(KeyCode.Space))
@@ -60,17 +70,34 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    public Transform playerModel;
     void Move()
     {
         float x = Input.GetAxisRaw("Horizontal");
 
+        // Walking animation
+        if (animator != null)
+        {
+            animator.SetFloat("Speed", Mathf.Abs(x));
+        }
+
+        // Rotate player left/right
+       if (x > 0)
+    {
+        playerModel.localRotation = Quaternion.Euler(0, 0, 0);
+    }
+    else if (x < 0)
+    {
+        playerModel.localRotation = Quaternion.Euler(0, 180, 0);
+    }
+
+
         if (isClimbing)
         {
-            // Anchored to a grab point: gravity is off (see TrunkClimb.Grab),
-            // so drive full X/Y movement directly instead of X/Z.
             float yClimb = Input.GetAxisRaw("Vertical");
 
             Vector3 climbVel = rb.linearVelocity;
+
             climbVel.x = x * moveSpeed;
             climbVel.y = yClimb * moveSpeed;
             climbVel.z = 0f;
@@ -78,6 +105,7 @@ public class PlayerController : MonoBehaviour
             rb.linearVelocity = climbVel;
             return;
         }
+
 
         float z = 0f;
 
@@ -87,22 +115,26 @@ public class PlayerController : MonoBehaviour
         }
 
         Vector3 vel = rb.linearVelocity;
+
         vel.x = x * moveSpeed;
         vel.z = z * moveSpeed;
 
         rb.linearVelocity = vel;
     }
 
+
     void Jump()
     {
         if (isClimbing)
             return;
 
-        if (!isGrounded) return;
+        if (!isGrounded)
+            return;
 
         rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
         isGrounded = false;
     }
+
 
     void Shoot()
     {
@@ -112,11 +144,26 @@ public class PlayerController : MonoBehaviour
         if (!canShoot)
             return;
 
+
         Debug.Log("shooting");
+
         Vector3 shootDir = GetMouseDirection();
 
-        GameObject bullet = Instantiate(bulletPrefab, shootPoint.position, Quaternion.identity);
-        Debug.DrawRay(shootPoint.position, shootDir * 5f, Color.green, 2f);
+        GameObject bullet = Instantiate(
+            bulletPrefab,
+            shootPoint.position,
+            Quaternion.identity
+        );
+
+
+        Debug.DrawRay(
+            shootPoint.position,
+            shootDir * 5f,
+            Color.green,
+            2f
+        );
+
+
         BulletRicochet b = bullet.GetComponent<BulletRicochet>();
 
         if (b != null)
@@ -129,19 +176,23 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    [SerializeField] private Transform firePoint;
 
     Vector3 GetMouseDirection()
     {
         Ray ray = cam.ScreenPointToRay(Input.mousePosition);
 
-        Plane plane = new Plane(Vector3.forward, shootPoint.position);
+        Plane plane = new Plane(
+            Vector3.forward,
+            shootPoint.position
+        );
+
 
         if (plane.Raycast(ray, out float enter))
         {
             Vector3 mouseWorld = ray.GetPoint(enter);
 
             Vector3 dir = mouseWorld - shootPoint.position;
+
             dir.z = 0f;
 
             return dir.normalized;
@@ -150,16 +201,25 @@ public class PlayerController : MonoBehaviour
         return Vector3.right;
     }
 
+
     void CheckGround()
     {
-        isGrounded = Physics.Raycast(transform.position, Vector3.down, groundCheckDistance, groundLayer);
+        isGrounded = Physics.Raycast(
+            transform.position,
+            Vector3.down,
+            groundCheckDistance,
+            groundLayer
+        );
     }
+
 
     public void EnableZMovement()
     {
         IsAbovePlatform = true;
+
         rb.constraints = RigidbodyConstraints.FreezeRotation;
     }
+
 
     public void DisableZMovement()
     {
@@ -169,23 +229,35 @@ public class PlayerController : MonoBehaviour
             RigidbodyConstraints.FreezeRotation |
             RigidbodyConstraints.FreezePositionZ;
 
+
         Vector3 pos = transform.position;
+
         pos.z = 0f;
+
         transform.position = pos;
     }
+
 
     public void EnableShooting()
     {
         canShoot = true;
     }
 
+
     public void DisableShooting()
     {
         canShoot = false;
     }
 
+
     public void SetClimbing(bool climbing)
     {
         isClimbing = climbing;
+    }
+
+
+    void OnDestroy()
+    {
+        Debug.Log("player has been destroyed");
     }
 }

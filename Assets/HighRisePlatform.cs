@@ -8,6 +8,9 @@ public class HighRisePlatform : MonoBehaviour
     public Transform highRisePlatform;
     void Update()
     {
+        if (player == null || highRisePlatform == null || platformCollider == null)
+            return;
+
         if ( player.transform.position.y < highRisePlatform.position.y)
         {
             platformCollider.enabled = false;

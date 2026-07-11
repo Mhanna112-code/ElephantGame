@@ -1,3 +1,4 @@
+using System.Linq;
 using UnityEngine;
 
 public class OneWayPlatform : MonoBehaviour
@@ -10,6 +11,10 @@ public class OneWayPlatform : MonoBehaviour
     public Transform highPlatform;
     bool playedCutscene = false;
     bool playedResetCutscene = false;
+    void Start()
+    {
+        player = GameObject.Find("Player").GetComponent<PlayerController>();
+    }
 
     void Update()
     {
