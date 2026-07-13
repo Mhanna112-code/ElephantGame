@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class SplineMover : MonoBehaviour
+public class MovingBoxSpline : MonoBehaviour
 {
     public Transform[] points;
     public float speed = 2f;
