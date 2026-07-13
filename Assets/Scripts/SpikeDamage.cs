@@ -14,63 +14,76 @@ public class SpikeDamage : MonoBehaviour
 
     void OnTriggerStay(Collider other)
     {
+        Debug.Log("triggered");
         // Ignore trunk damage but allow collision
         if (other.CompareTag("Trunk"))
         {
             return;
         }
 
-        Health health = other.GetComponentInParent<Health>();
-
-        if (health != null)
-        {
-            DealDamage(health.gameObject);
-        }
+        HandleHit(other.gameObject);
     }
 
     void OnCollisionStay(Collision collision)
     {
+        Debug.Log("collided");
         // Ignore trunk damage but allow collision
         if (collision.collider.CompareTag("Trunk"))
         {
             return;
         }
 
-        Health health = collision.collider.GetComponentInParent<Health>();
-
-        if (health != null)
-        {
-            DealDamage(health.gameObject);
-        }
+        HandleHit(collision.collider.gameObject);
     }
 
-    void DealDamage(GameObject player)
+    void HandleHit(GameObject hitObject)
     {
         if (!canDamage)
             return;
 
-        Health health = player.GetComponent<Health>();
+        Health health = hitObject.GetComponentInParent<Health>();
+        GameObject cart = null;
+        Debug.Log("checking + minecart");
 
-        if (health != null)
+        if (health == null)
         {
-            Debug.Log("Spike damaged player");
-            health.TakeDamage(damage);
+            // The minecart's own colliders take the hit while riding, since the
+            // player is parented underneath it and GetComponentInParent can't see down.
+            MinecartInteraction minecart = hitObject.GetComponentInParent<MinecartInteraction>();
+            Debug.Log("minecart: " + minecart);
+            if (minecart != null && minecart.IsRiding && minecart.player != null)
+            {
+                health = minecart.player.GetComponent<Health>();
+                cart = minecart.gameObject;
+            }
         }
 
-        StartCoroutine(Invincibility(player));
+        if (health == null)
+            return;
+
+        Debug.Log("Spike damaged player");
+        health.TakeDamage(damage);
+
+        StartCoroutine(Invincibility(health.gameObject, cart));
     }
 
-    IEnumerator Invincibility(GameObject player)
+    IEnumerator Invincibility(GameObject player, GameObject cart)
     {
         canDamage = false;
 
-        Renderer[] renderers = player.GetComponentsInChildren<Renderer>();
+        Renderer[] playerRenderers = player.GetComponentsInChildren<Renderer>();
+        Renderer[] cartRenderers = cart != null ? cart.GetComponentsInChildren<Renderer>() : new Renderer[0];
 
         float timer = 0f;
 
         while (timer < invincibilityTime)
         {
-            foreach (Renderer r in renderers)
+            foreach (Renderer r in playerRenderers)
+            {
+                r.enabled = !r.enabled;
+            }
+
+            foreach (Renderer r in cartRenderers)
             {
                 r.enabled = !r.enabled;
             }
@@ -79,7 +92,12 @@ public class SpikeDamage : MonoBehaviour
             timer += flashInterval;
         }
 
-        foreach (Renderer r in renderers)
+        foreach (Renderer r in playerRenderers)
+        {
+            r.enabled = true;
+        }
+
+        foreach (Renderer r in cartRenderers)
         {
             r.enabled = true;
         }

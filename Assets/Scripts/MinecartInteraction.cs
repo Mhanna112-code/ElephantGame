@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Splines;
 
 public class MinecartInteraction : MonoBehaviour
 {
@@ -16,12 +17,22 @@ public class MinecartInteraction : MonoBehaviour
     public float tiltAngle = 25f;
     public float tiltSpeed = 5f;
 
+    [Header("Wheels")]
+    public Transform[] wheels;
+    public float wheelRadius = 0.3f;
+    public Vector3 wheelRotationAxis = Vector3.right;
+
+    public bool IsRiding => isRiding;
+
     private bool isRiding;
     private Transform playerTransform;
     private Rigidbody playerRb;
-    private MovingBoxSpline railway;
-    private Quaternion baseRotation;
+    private SplineAnimate splineAnimate;
     private float currentTilt;
+
+    private Vector3 lastSplinePosition;
+    private Quaternion lastSplineRotation;
+    private bool hasLastSpline;
 
     void Start()
     {
@@ -38,12 +49,26 @@ public class MinecartInteraction : MonoBehaviour
             playerRb = player.GetComponent<Rigidbody>();
         }
 
-        railway = GetComponent<MovingBoxSpline>();
-        baseRotation = transform.rotation;
+        splineAnimate = GetComponent<SplineAnimate>();
 
         // Cart sits still on its track until someone boards it.
-        if (railway != null)
-            railway.enabled = false;
+        if (splineAnimate != null)
+            splineAnimate.Pause();
+    }
+
+    void OnEnable()
+    {
+        if (splineAnimate == null)
+            splineAnimate = GetComponent<SplineAnimate>();
+
+        if (splineAnimate != null)
+            splineAnimate.Updated += OnSplineUpdated;
+    }
+
+    void OnDisable()
+    {
+        if (splineAnimate != null)
+            splineAnimate.Updated -= OnSplineUpdated;
     }
 
     void Update()
@@ -65,26 +90,55 @@ public class MinecartInteraction : MonoBehaviour
 
         if (isRiding)
         {
-            ApplyTilt();
+            UpdateTilt();
         }
     }
 
-    void ApplyTilt()
+    void UpdateTilt()
     {
         float input = Input.GetAxisRaw("Horizontal");
         float targetTilt = input * tiltAngle;
 
         currentTilt = Mathf.MoveTowards(currentTilt, targetTilt, tiltSpeed * 60f * Time.deltaTime);
+    }
 
-        transform.rotation = baseRotation * Quaternion.Euler(0f, 0f, currentTilt);
+    // Called by SplineAnimate right after it sets this frame's base position/rotation
+    // from the spline. We layer the steering lean on top instead of fighting it.
+    void OnSplineUpdated(Vector3 splinePosition, Quaternion splineRotation)
+    {
+        transform.rotation = splineRotation * Quaternion.Euler(0f, 0f, currentTilt);
+
+        if (hasLastSpline)
+        {
+            float distanceTraveled = (splinePosition - lastSplinePosition).magnitude;
+            RotateWheels(distanceTraveled);
+        }
+
+        lastSplinePosition = splinePosition;
+        lastSplineRotation = splineRotation;
+        hasLastSpline = true;
+    }
+
+    void RotateWheels(float distanceTraveled)
+    {
+        if (wheels == null || wheels.Length == 0 || wheelRadius <= 0f)
+            return;
+
+        float angle = (distanceTraveled / wheelRadius) * Mathf.Rad2Deg;
+
+        foreach (Transform wheel in wheels)
+        {
+            if (wheel != null)
+                wheel.Rotate(wheelRotationAxis, angle, Space.Self);
+        }
     }
 
     void Mount()
     {
         isRiding = true;
 
-        if (railway != null)
-            railway.enabled = true;
+        if (splineAnimate != null)
+            splineAnimate.Play();
 
         player.SetRidingMinecart(true);
 
@@ -104,11 +158,13 @@ public class MinecartInteraction : MonoBehaviour
     {
         isRiding = false;
 
-        if (railway != null)
-            railway.enabled = false;
+        if (splineAnimate != null)
+            splineAnimate.Pause();
 
         currentTilt = 0f;
-        transform.rotation = baseRotation;
+
+        if (hasLastSpline)
+            transform.rotation = lastSplineRotation;
 
         playerTransform.SetParent(null);
 
