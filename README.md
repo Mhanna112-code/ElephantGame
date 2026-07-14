@@ -5,8 +5,26 @@ A ground-up TypeScript rebuild of Team Ratateam's game-jam project *ElephantGame
 with its failure modes designed out. See `DESIGN.md` for the full redesign
 rationale and the fun audit.
 
-**Play**: open `dist/index.html` in a browser (one self-contained file, ~40KB,
-no dependencies, works offline).
+## How to run
+
+**Zero-tools way:** download/open `dist/index.html` in any browser. It's one
+self-contained ~52KB file — no install, no server, works offline. (From GitHub:
+open the file on this branch → Raw → save → double-click.)
+
+**Dev way** (only needed to modify the game):
+```bash
+# install bun once: https://bun.sh  (curl -fsSL https://bun.sh/install | bash)
+bun test          # run the 22 bot playtests
+bun run build.ts  # rebuild dist/index.html
+open dist/index.html
+```
+No node_modules, no package install — the game has zero dependencies; bun is
+just the TypeScript runner/bundler.
+
+**Note for ElephantGame teammates:** this branch (`trunkgame-ts-rebuild`) has
+its own history, unrelated to the Unity project on `master`. Don't check it out
+inside your Unity clone — Unity will not enjoy the working tree swap. Use a
+separate clone/worktree, or just grab `dist/index.html`.
 
 ## The pitch
 
