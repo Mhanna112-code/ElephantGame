@@ -131,3 +131,32 @@ mastery** (Downwell lineage).
 6. **Restart < 1s** — death fade 0.6s, respawn with i-frames, zero menus.
 7. Bot tests prove solvability; screenshots + feel targets guard fun. Known
    limit: green tests ≠ fun — that's what the feel numbers and juice pass are for.
+
+## Appendix: original-source traceability (every Unity script → TRUNK!)
+
+| Unity source | Idea | In TRUNK! |
+|---|---|---|
+| PlayerController.cs | A/D move, mouse aim, trunk-tip shooting | core loop; bullets spawn at trunk tip |
+| BulletRicochet.cs | reflect ≤5 bounces, 0.8 speed, recoil impulse | same numbers; recoil radius-limited w/ falloff |
+| TrunkSwing.cs | trunk follows cursor (IK) | drawn trunk aims at cursor, folds when idle |
+| Climbing.cs (TrunkClimb) | E-anchor tether, range-clamped swing | grab rings with rope constraint + momentum |
+| TrunkGrab.cs | spring-joint grapple prototype | folded into the ring tether |
+| Lever.cs / ResetLever / HorizontalResetLever | trunk-flick levers toggle doors/platforms | lever (E or shoot) opens exit door; guard door |
+| LeverSnapZone.cs | carry lever to slot, hidden door appears | plate reveals guarded lever (simplified chain) |
+| BoxSnapZone.cs + Springs.fbx | box in zone reveals rising platform + spring bounce | plate press reveals spring pad + heart shelf |
+| SlidingBox.cs | shoot box, slides to wall, floor-edge safe | push-box slides on shots, strong friction |
+| MovingPlatform.cs | patrols, ricochet toggleable, red/green | movers with ricochet flag |
+| FlashingPlatform.cs | timed red/green ricochet gates | flashing movers: tower gates, shaft covers, boss mirror |
+| OneWayPlatform.cs / HighRisePlatform.cs | pass-below platforms, height-gated | one-way platforms (+ directional bullet rule) |
+| WindZone.cs | upward impulse zone between walls | pulsing wind shaft (on/off cycle) |
+| MinecartInteraction / MovingBoxSpline / Rails1.fbx | E to ride spline cart, wheels, tilt | polyline-rail cart over spike alley, launch exit |
+| SpikeDamage.cs / Spike.fbx | 20 dmg + invincibility flash | spike strips + spike balls, 1.2s i-frames |
+| Health.cs | 100hp, bar UI, flash, boss-collision ignore | hp bar, damage flash, i-frames |
+| Checkpoint / CheckpointManager / Deathzone | respawn points, kill floor | checkpoint flags, death pit, 0.6s respawn |
+| DodgeBullets.cs (+ toad.controller) | floating critter that dodges bullets | dodger toads (hover, sidestep, 2hp) |
+| BossBehavior / BossFightController / BossHealth | intro leap, chase, punch windup, leap attack, contact dmg, 100hp | boss: intro, chase, telegraphed windup, predictive leap, contact dmg, 160hp, enrage |
+| BossCutsceneCamera.cs | zoom-out on boss entrance | camera zoom 0.72x during intro |
+| CutSceneCamera.cs (top-down section) | camera mode switch | deliberately cut (see failure table) — depth kept via altitude change instead |
+| GamePause.cs | pause | P key |
+| FollowCamera.cs (ours, from the fix night) | camera must not inherit player rotation | camera is code-only, lerp + look-ahead |
+| StickFront.cs | rig helper | n/a (no 3D rig) |
