@@ -8,8 +8,9 @@ public class PlayerController : MonoBehaviour
     public float jumpForce = 8f;
 
     [Header("Ground Check")]
+    public Transform groundCheckPoint;
     public float groundCheckDistance = 0.3f;
-    public LayerMask groundLayer = (1 << 0) | (1 << 9); 
+    public LayerMask groundLayer;
     [Header("Shooting")]
     public GameObject bulletPrefab;
     public Transform shootPoint;
@@ -29,6 +30,7 @@ public class PlayerController : MonoBehaviour
     public bool IsAbovePlatform { get; private set; }
 
     private bool isClimbing;
+    private bool isRidingMinecart;
 
     void Start()
     {
@@ -50,8 +52,9 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
+        EnableZMovement();
         CheckGround();
-
+        Debug.Log("isGrounded: " + isGrounded);
         // Update animator
         if (animator != null)
         {
@@ -60,8 +63,8 @@ public class PlayerController : MonoBehaviour
 
         Move();
 
-        if (Input.GetKeyDown(KeyCode.Space))
-            Jump();
+        //if (Input.GetKeyDown(KeyCode.Space))
+          //  Jump();
 
         if (Input.GetMouseButtonDown(0))
         {
@@ -73,6 +76,9 @@ public class PlayerController : MonoBehaviour
     public Transform playerModel;
     void Move()
     {
+        if (isRidingMinecart)
+            return;
+
         float x = Input.GetAxisRaw("Horizontal");
 
         // Walking animation
@@ -82,15 +88,16 @@ public class PlayerController : MonoBehaviour
         }
 
         // Rotate player left/right
-       if (x > 0)
+    if (x > 0)
     {
-        playerModel.localRotation = Quaternion.Euler(0, 0, 0);
+        // Facing right
+        playerModel.localRotation = Quaternion.Euler(-90f, 0f, -90f);
     }
     else if (x < 0)
     {
-        playerModel.localRotation = Quaternion.Euler(0, 180, 0);
+        // Facing left
+        playerModel.localRotation = Quaternion.Euler(-90f, 0f, 90f);
     }
-
 
         if (isClimbing)
         {
@@ -126,6 +133,9 @@ public class PlayerController : MonoBehaviour
     void Jump()
     {
         if (isClimbing)
+            return;
+
+        if (isRidingMinecart)
             return;
 
         if (!isGrounded)
@@ -204,12 +214,16 @@ public class PlayerController : MonoBehaviour
 
     void CheckGround()
     {
+        Vector3 origin = groundCheckPoint != null ? groundCheckPoint.position : transform.position;
+
         isGrounded = Physics.Raycast(
-            transform.position,
+            origin,
             Vector3.down,
             groundCheckDistance,
             groundLayer
         );
+
+        Debug.DrawRay(origin, Vector3.down * groundCheckDistance, isGrounded ? Color.green : Color.red);
     }
 
 
@@ -253,6 +267,12 @@ public class PlayerController : MonoBehaviour
     public void SetClimbing(bool climbing)
     {
         isClimbing = climbing;
+    }
+
+
+    public void SetRidingMinecart(bool riding)
+    {
+        isRidingMinecart = riding;
     }
 
 
