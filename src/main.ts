@@ -18,6 +18,7 @@ const AUTOPLAY = qp.get("bot"); // bot=tutorial etc: replay scripted inputs for 
 const keys = new Set<string>();
 let mouseScreen = { x: VIEW_W / 2, y: VIEW_H / 2 };
 let shootQueued = false;
+let spaceQueued = false;
 let shootHeld = false;
 let interactQueued = false;
 
@@ -25,6 +26,7 @@ window.addEventListener("keydown", (e) => {
   if (e.repeat) return;
   keys.add(e.code);
   if (e.code === "KeyE") interactQueued = true;
+  if (e.code === "Space") { spaceQueued = true; audio.resume(); e.preventDefault(); }
   if (e.code === "KeyP") state.paused = !state.paused;
   if (e.code === "KeyR" && (state.won || state.player.dead || e.shiftKey)) state = makeLevel();
 });
@@ -130,11 +132,12 @@ function frame(now: number) {
     const input: Input = {
       left: keys.has("KeyA") || keys.has("ArrowLeft"),
       right: keys.has("KeyD") || keys.has("ArrowRight"),
-      aimX: mouseWorld.x, aimY: mouseWorld.y,
-      shoot: shootQueued, shootHeld,
+      aimX: spaceQueued ? state.player.x : mouseWorld.x,
+      aimY: spaceQueued ? state.player.y - 2 : mouseWorld.y,
+      shoot: shootQueued || spaceQueued, shootHeld,
       interact: interactQueued, interactHeld: keys.has("KeyE"),
     };
-    shootQueued = false; interactQueued = false;
+    shootQueued = false; interactQueued = false; spaceQueued = false;
     step(state, input, DT);
     acc -= DT;
   }

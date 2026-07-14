@@ -27,6 +27,7 @@ const html = `<meta charset="utf-8">
   <span class="chip"><b>A/D</b> move</span>
   <span class="chip"><b>mouse</b> aim trunk</span>
   <span class="chip"><b>click</b> shoot — bounces near you launch you</span>
+  <span class="chip"><b>space</b> shot at your feet (rocket jump)</span>
   <span class="chip"><b>E</b> carts · rings · levers</span>
   <span class="chip"><b>3</b> shots per flight — land or bounce off <b>green</b> to reload</span>
   <span class="chip"><b>P</b> pause</span>
