@@ -285,7 +285,7 @@ export function makeLevel(): State {
 
   const boss: Boss = {
     x: 179, y: 45.4 + 1.1, vx: 0, vy: 0, w: 2.6, h: 2.2,
-    hp: 100, maxHp: 100, phase: "waiting", timer: 0,
+    hp: 160, maxHp: 160, phase: "waiting", timer: 0,
     attackCooldown: 0, leapCooldown: 4, hitFlash: 0, faceDir: -1, dodgeCooldown: 0, dodgeTelegraph: 0,
   };
 
@@ -724,7 +724,9 @@ export function step(s: State, input: Input, dt: number): void {
       const boss = s.boss;
       if (boss.phase !== "waiting" && boss.phase !== "dead" &&
           overlaps(br, { x: boss.x - boss.w / 2, y: boss.y - boss.h / 2, w: boss.w, h: boss.h })) {
-        boss.hp = Math.max(0, boss.hp - 8);
+        const wasAbove = boss.hp >= boss.maxHp * 0.4;
+        boss.hp = Math.max(0, boss.hp - 7);
+        if (wasAbove && boss.hp < boss.maxHp * 0.4 && boss.hp > 0) s.toast = { text: "he's FURIOUS!", timer: 1.6 };
         boss.hitFlash = 0.15;
         b.dead = true;
         s.shake = Math.max(s.shake, 0.2);
@@ -973,7 +975,7 @@ function updateBoss(s: State, input: Input, dt: number) {
       boss.dodgeTelegraph = Math.max(0, boss.dodgeTelegraph - dt);
       if (boss.dodgeTelegraph > 0 && boss.dodgeTelegraph - dt <= 0) {
         boss.vx = -boss.faceDir * 11; // hop backward out of the shot line
-        boss.dodgeCooldown = 1.6;
+        boss.dodgeCooldown = boss.hp < boss.maxHp * 0.4 ? 0.7 : 1.0;
       }
       if (boss.dodgeCooldown <= 0 && boss.dodgeTelegraph <= 0) {
         for (const b of s.bullets) {
@@ -981,7 +983,7 @@ function updateBoss(s: State, input: Input, dt: number) {
           // bullet is heading at the boss AND coming from the side he faces
           const headingAtBoss = Math.sign(b.dx) === Math.sign(toBossX) && b.dx !== 0;
           const fromFacingSide = Math.sign(-toBossX) === boss.faceDir;
-          if (headingAtBoss && fromFacingSide && Math.abs(toBossX) < 6 && Math.abs(b.y - boss.y) < 2.5) {
+          if (headingAtBoss && fromFacingSide && Math.abs(toBossX) < 9 && Math.abs(b.y - boss.y) < 2.5) {
             boss.dodgeTelegraph = 0.22;
             break;
           }
@@ -992,15 +994,18 @@ function updateBoss(s: State, input: Input, dt: number) {
       boss.attackCooldown -= dt;
       // friction after dodge dash
       boss.vx *= Math.pow(0.05, dt);
-      const chaseV = 3.4 * boss.faceDir;
+      const enraged = boss.hp < boss.maxHp * 0.4;
+      const chaseV = (enraged ? 5.6 : 4.6) * boss.faceDir;
       boss.x += (chaseV + boss.vx) * dt;
       // gravity/floor
       boss.y = Math.max(45.4 + boss.h / 2, boss.y - 10 * dt);
       if (boss.leapCooldown <= 0 && dist > 3) {
         boss.phase = "leap"; boss.timer = 0;
         boss.vy = 11;
-        boss.vx = Math.sign(p.x - boss.x) * Math.min(9, dist * 1.4);
-        boss.leapCooldown = 5;
+        // lead the target: aim where the player is heading
+        const predicted = p.x + p.vx * 0.55;
+        boss.vx = Math.sign(predicted - boss.x) * Math.min(11, Math.abs(predicted - boss.x) * 1.3);
+        boss.leapCooldown = enraged ? 2.4 : 3.5;
         return;
       }
       if (dist < 2.2 && boss.attackCooldown <= 0) {
@@ -1033,7 +1038,7 @@ function updateBoss(s: State, input: Input, dt: number) {
         s.shake = 0.6;
         spawnParticles(s, boss.x, boss.y - 1, 12, "puff", 20);
         // shockwave damage if player grounded & near
-        if (p.grounded && Math.abs(p.x - boss.x) < 3.5) damagePlayer(s, 10, Math.sign(p.x - boss.x) * 8, 8);
+        if (p.grounded && Math.abs(p.x - boss.x) < 4.5) damagePlayer(s, 10, Math.sign(p.x - boss.x) * 8, 8);
         boss.phase = "chase";
       }
       // clamp to arena
