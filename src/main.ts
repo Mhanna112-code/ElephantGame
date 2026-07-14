@@ -51,6 +51,7 @@ canvas.addEventListener("mousedown", (e) => {
 });
 window.addEventListener("mouseup", () => { shootHeld = false; });
 canvas.addEventListener("contextmenu", (e) => e.preventDefault());
+document.addEventListener("visibilitychange", () => { if (document.hidden && started && !state.won) state.paused = true; });
 
 // ---------- audio (procedural, WebAudio) ----------
 class Sfx {

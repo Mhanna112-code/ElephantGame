@@ -42,11 +42,13 @@ const PAL = {
   bossDark: "#5a4fc0",
 };
 
+const REDUCED_MOTION = typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+
 export function render(ctx: CanvasRenderingContext2D, s: State, mouse: { x: number; y: number }) {
   const sc = BASE_SCALE * s.zoom;
-  // camera shake
-  const shx = (s.shake > 0 ? (Math.sin(s.t * 91) * s.shake * 8) : 0);
-  const shy = (s.shake > 0 ? (Math.cos(s.t * 83) * s.shake * 6) : 0);
+  // camera shake (disabled under prefers-reduced-motion)
+  const shx = (!REDUCED_MOTION && s.shake > 0 ? (Math.sin(s.t * 91) * s.shake * 8) : 0);
+  const shy = (!REDUCED_MOTION && s.shake > 0 ? (Math.cos(s.t * 83) * s.shake * 6) : 0);
 
   // ---- sky ----
   const g = ctx.createLinearGradient(0, 0, 0, VIEW_H);
@@ -762,6 +764,9 @@ function drawHud(ctx: CanvasRenderingContext2D, s: State) {
     ctx.fillStyle = "#ffe9c9";
     ctx.font = "900 42px system-ui, sans-serif";
     ctx.fillText("PAUSED", VIEW_W / 2, VIEW_H / 2);
+    ctx.font = "500 15px system-ui, sans-serif";
+    ctx.fillStyle = "#b9a6d9";
+    ctx.fillText("A/D move · mouse aims · click shoots · space rocket-jumps · E interacts · M music · shift+R restart", VIEW_W / 2, VIEW_H / 2 + 36);
   }
 }
 
