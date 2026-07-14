@@ -154,6 +154,7 @@ export interface State {
   tether: { ringIndex: number; len: number } | null;
   zoom: number; zoomTarget: number;
   paused: boolean;
+  grump: boolean;
   checkpoints: Vec[];
   checkpoint: Vec;
   deathY: number;       // below this = death
@@ -179,7 +180,7 @@ function rng(s: State): number {
 
 // ---------- level ----------
 // Units: 1u ≈ 40px. Player is 0.9w x 1.3h. World ~205u wide.
-export function makeLevel(): State {
+export function makeLevel(grump = false): State {
   const P: Platform[] = [];
   const ground = (x: number, w: number, y = 0, h = 3, deco: Platform["deco"] = "grass") =>
     P.push({ x, y: y - h, w, h, deco });
@@ -291,7 +292,7 @@ export function makeLevel(): State {
 
   const boss: Boss = {
     x: 179, y: 45.4 + 1.1, vx: 0, vy: 0, w: 2.6, h: 2.2,
-    hp: 160, maxHp: 160, phase: "waiting", timer: 0,
+    hp: grump ? 220 : 160, maxHp: grump ? 220 : 160, phase: "waiting", timer: 0,
     attackCooldown: 0, leapCooldown: 4, hitFlash: 0, faceDir: -1, dodgeCooldown: 0, dodgeTelegraph: 0, spitCooldown: 2,
   };
 
@@ -364,7 +365,7 @@ export function makeLevel(): State {
   const player: Player = {
     x: 2.5, y: 1.5, w: 0.9, h: 1.3, vx: 0, vy: 0,
     grounded: false, coyote: 0, face: 1,
-    hp: 100, maxHp: 100, iframes: 0, shootCooldown: 0,
+    hp: grump ? 70 : 100, maxHp: grump ? 70 : 100, iframes: 0, shootCooldown: 0,
     aimX: 6, aimY: 2, aimActive: 0,
     dead: false, deathTimer: 0, walkPhase: 0, landedImpact: 0, inCart: false,
     ammo: 3, maxAmmo: 3, dryFire: 0,
@@ -377,7 +378,7 @@ export function makeLevel(): State {
     zoom: 1, zoomTarget: 1, paused: false, checkpoints, checkpoint: { x: 2.5, y: 1.5 },
     deathY: -14, camX: player.x, camY: player.y + 1.5, shake: 0, hitStop: 0,
     rngState: 1337, won: false, wonTimer: 0, bossArenaX: 168.2,
-    runTime: 0, runStarted: false,
+    runTime: 0, runStarted: false, grump,
     stats: { shots: 0, bounces: 0, launches: 0, deaths: 0, damageTaken: 0, peanuts: 0 },
     toast: { text: "", timer: 0 },
   };
@@ -1058,11 +1059,11 @@ function updateBoss(s: State, input: Input, dt: number) {
       // friction after dodge dash
       boss.vx *= Math.pow(0.05, dt);
       const enraged = boss.hp < boss.maxHp * 0.4;
-      const chaseV = (enraged ? 5.6 : 4.6) * boss.faceDir;
+      const chaseV = ((enraged ? 5.6 : 4.6) + (s.grump ? 1.1 : 0)) * boss.faceDir;
       // PHASE 2: enraged, he uses your own trick — bouncing trunk-shots
       boss.spitCooldown -= dt;
       if (enraged && boss.spitCooldown <= 0) {
-        boss.spitCooldown = 2.6;
+        boss.spitCooldown = s.grump ? 1.7 : 2.6;
         for (const spread of [-0.25, 0.05, 0.35]) {
           const ddx = Math.sign(p.x - boss.x) || boss.faceDir;
           const len = Math.hypot(1, spread) || 1;
@@ -1085,7 +1086,7 @@ function updateBoss(s: State, input: Input, dt: number) {
         // lead the target: aim where the player is heading
         const predicted = p.x + p.vx * 0.55;
         boss.vx = Math.sign(predicted - boss.x) * Math.min(11, Math.abs(predicted - boss.x) * 1.3);
-        boss.leapCooldown = enraged ? 2.4 : 3.5;
+        boss.leapCooldown = (enraged ? 2.4 : 3.5) - (s.grump ? 0.8 : 0);
         return;
       }
       if (dist < 2.2 && boss.attackCooldown <= 0) {

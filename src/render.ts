@@ -826,7 +826,7 @@ function drawHud(ctx: CanvasRenderingContext2D, s: State) {
     const allPeanuts = s.stats.peanuts === s.peanuts.length;
     ctx.fillStyle = "#ffd24a";
     ctx.font = "900 64px system-ui, sans-serif";
-    ctx.fillText(allPeanuts ? "PERFECT WIN!" : "YOU WIN!", VIEW_W / 2, VIEW_H / 2 - 30);
+    ctx.fillText(s.grump ? "GRUMP TAMED!" : (allPeanuts ? "PERFECT WIN!" : "YOU WIN!"), VIEW_W / 2, VIEW_H / 2 - 30);
     if (allPeanuts) {
       ctx.font = "700 20px system-ui, sans-serif";
       ctx.fillStyle = "#e8b04a";

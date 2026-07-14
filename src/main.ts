@@ -26,6 +26,7 @@ let interactQueued = false;
 window.addEventListener("keydown", (e) => {
   if (e.repeat) return;
   if (!started && (e.code === "Space" || e.code === "Enter")) { started = true; startFresh(); audio.resume(); audio.startMusic(); return; }
+  if (!started && e.code === "KeyG" && wonBefore()) { started = true; startFresh(true); audio.resume(); audio.startMusic(); return; }
   if (e.code === "KeyM") audio.toggleMusic();
   keys.add(e.code);
   if (e.code === "KeyE") interactQueued = true;
@@ -50,8 +51,12 @@ canvas.addEventListener("mousedown", (e) => {
   }
 });
 
-function startFresh() {
-  state = makeLevel();
+function wonBefore(): boolean {
+  try { return localStorage.getItem("trunk-won") === "1"; } catch { return false; }
+}
+
+function startFresh(grump = false) {
+  state = makeLevel(grump);
   window.__state = state;
   prev = { shots: 0, bounces: 0, launches: 0, deaths: 0, hp: 100, bossHp: state.boss.maxHp, won: false, toast: "", hearts: 0, leverOn: false, cp: "", peanuts: 0 };
 }
@@ -166,7 +171,7 @@ function audioTick(s: State) {
   if (s.stats.deaths > prev.deaths) audio.death();
   else if (s.player.hp < prev.hp) audio.hurt();
   if (s.boss.hp < prev.bossHp) audio.bossHit();
-  if (s.won && !prev.won) { audio.win(); recordBest(s.runTime); }
+  if (s.won && !prev.won) { audio.win(); recordBest(s.runTime); try { localStorage.setItem("trunk-won", "1"); } catch {} }
   const hearts = s.hearts.filter(h => h.taken).length;
   if (hearts > prev.hearts) audio.pickup();
   if (s.stats.peanuts > prev.peanuts) audio.peanut();

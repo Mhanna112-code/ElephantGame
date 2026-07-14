@@ -394,3 +394,20 @@ test("phase 2 counterplay: player bullets intercept hostile peanuts mid-air", ()
   }
   expect(intercepted).toBe(true);
 });
+
+test("grump mode: harder boss and thinner health, still killable", () => {
+  const s = makeLevel(true);
+  expect(s.boss.maxHp).toBe(220);
+  expect(s.player.maxHp).toBe(70);
+  teleport(s, 174, 46.5);
+  sim(s, {}, 3.5);
+  let guard = 0;
+  while (s.boss.hp > 0 && guard++ < 900) {
+    const p = s.player;
+    if (p.hp < 30) p.hp = 70;
+    if (p.y < 44) { sim(s, { left: p.x > 169, right: p.x < 168 }, 0.3); continue; }
+    if (p.grounded) shot(s, s.boss.x, s.boss.y + 0.5);
+    sim(s, { left: p.x > s.boss.x + 4, right: p.x < s.boss.x - 4 }, 0.3);
+  }
+  expect(s.boss.hp).toBe(0);
+});
