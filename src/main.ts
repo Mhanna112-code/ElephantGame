@@ -6,7 +6,7 @@ const canvas = document.getElementById("game") as HTMLCanvasElement;
 const ctx = canvas.getContext("2d")!;
 canvas.width = VIEW_W; canvas.height = VIEW_H;
 
-let state: State = makeLevel();
+let state: State = makeLevel(new URLSearchParams(location.search).has("grump"));
 
 // ---------- query params (test/screenshot hooks) ----------
 const qp = new URLSearchParams(location.search);
