@@ -63,6 +63,18 @@ export function render(ctx: CanvasRenderingContext2D, s: State, mouse: { x: numb
   ctx.fillStyle = "rgba(255,210,140,0.25)";
   ctx.beginPath(); ctx.arc(VIEW_W * 0.72, VIEW_H * 0.26, 70, 0, 7); ctx.fill();
 
+  // stars fade in with altitude (the climb ends above the clouds)
+  const alt = Math.max(0, Math.min(1, (s.camY - 14) / 26));
+  if (alt > 0.02) {
+    for (let i = 0; i < 60; i++) {
+      const sx = ((i * 137.5) % 97) / 97 * VIEW_W;
+      const sy = (((i * 61.8) % 89) / 89) * VIEW_H * 0.75 - (s.camY * 2) % 40;
+      const tw = 0.5 + 0.5 * Math.sin(s.t * (1 + (i % 5) * 0.5) + i);
+      ctx.fillStyle = `rgba(255,240,220,${(0.55 * alt * tw).toFixed(3)})`;
+      ctx.fillRect(sx, ((sy % VIEW_H) + VIEW_H) % VIEW_H * 0.8, 2, 2);
+    }
+  }
+
   // parallax hills
   drawHills(ctx, s, 0.25, PAL.hillFar, 150, 90);
   drawHills(ctx, s, 0.5, PAL.hillNear, 90, 60);
@@ -471,7 +483,7 @@ export function getTrunkTip(s: State): { x: number; y: number } {
     const reach = Math.min(len, 1.1);
     return { x: p.x + (dx / len) * reach, y: p.y + 0.45 + (dy / len) * reach };
   }
-  return { x: p.x + p.face * 0.95, y: p.y + 0.25 };
+  return { x: p.x + p.face * 0.95, y: p.y + 0.25 + Math.sin(s.t * 2.2) * 0.06 };
 }
 
 function drawPlayer(ctx: CanvasRenderingContext2D, s: State, mouse: { x: number; y: number }) {
@@ -575,12 +587,15 @@ function drawBoss(ctx: CanvasRenderingContext2D, s: State) {
   ctx.save();
   ctx.translate(a.x, a.y);
   if (boss.faceDir > 0) ctx.scale(-1, 1);
-  if (dead) ctx.rotate(0.5);
+  if (dead) { ctx.rotate(2.4); ctx.translate(0, -h * 0.18); } // full belly-up flop
 
   const windup = boss.phase === "windup" ? Math.min(1, boss.timer / 0.35) : 0;
+  // dodge telegraph: a readable crouch — he's about to hop out of your shot line
+  const crouch = boss.dodgeTelegraph > 0 ? 1 : 0;
+  if (crouch) ctx.transform(1.12, 0, 0, 0.82, 0, h * 0.09);
 
   // body
-  ctx.fillStyle = boss.hitFlash > 0 ? "#fff" : PAL.boss;
+  ctx.fillStyle = boss.hitFlash > 0 ? "#fff" : (crouch ? "#9a8ffa" : PAL.boss);
   ctx.beginPath(); ctx.ellipse(0, 0, w / 2, h / 2, 0, 0, 7); ctx.fill();
   // belly
   ctx.fillStyle = boss.hitFlash > 0 ? "#eee" : PAL.bossDark;
