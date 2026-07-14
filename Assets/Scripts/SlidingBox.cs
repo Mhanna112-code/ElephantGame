@@ -156,7 +156,6 @@ public class SlidingBox : MonoBehaviour
         if (!Input.GetKey(KeyCode.E))
             return;
 
-        // 🔥 ONLY use true contact normal (not velocity)
         ContactPoint contact = collision.GetContact(0);
 
         Vector3 pushDir = contact.normal;
