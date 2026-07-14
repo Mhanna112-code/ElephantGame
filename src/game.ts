@@ -185,10 +185,10 @@ export function makeLevel(): State {
   ground(-2, 24);
   wall(-3, -3, 14); // left boundary
 
-  // 2 GAP FIELD x 22..52 (islands over a death pit; gaps ramp 4u -> 5u -> 4.5u)
-  ground(26, 5);
-  ground(36, 4);
-  ground(44.5, 11.5);
+  // 2 GAP FIELD x 22..52 (islands over a death pit; gaps ramp 3u -> 4u -> 3.5u)
+  ground(25, 6);
+  ground(35, 4.5);
+  ground(43, 13);
 
   // 3 SPIKE ALLEY + MINECART x 56..88
   ground(56, 34, 0, 3, "stone");
@@ -226,7 +226,7 @@ export function makeLevel(): State {
 
   const movers: MovingPlatform[] = [
     // gap field mover (carries across widest gap)
-    { x: 32.2, y: 0.6, w: 2.6, h: 0.5, x0: 32.2, x1: 32.2, y0: 0.6, y1: 0.6, speed: 0, t: 0, dir: 1, ricochet: true },
+    { x: 31.6, y: 0.5, w: 2.4, h: 0.5, x0: 31.6, x1: 31.6, y0: 0.5, y1: 0.5, speed: 0, t: 0, dir: 1, ricochet: true },
     // tower field: flashing ricochet gate (times your bounce shots)
     { x: 111, y: 16.2, w: 3.5, h: 0.5, x0: 108, x1: 114, y0: 16.2, y1: 16.2, speed: 1.6, t: 0, dir: 1, ricochet: false, flashing: { interval: 1.4, timer: 0 } },
     // wind shaft moving covers
