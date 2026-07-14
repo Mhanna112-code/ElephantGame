@@ -41,7 +41,7 @@ public class ResetLever : MonoBehaviour
     {
         if (activated)
             return;
-
+        Debug.Log("collided with trunk");
         if (!collision.collider.CompareTag("Bullet"))
             return;
 

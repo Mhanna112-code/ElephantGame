@@ -4,19 +4,37 @@ using System.Collections;
 public class CutsceneCamera : MonoBehaviour
 {
     public Transform cameraTransform;
+    public Transform player;
 
-    public Vector3 cutscenePosition;
     public float heightOffset = 10f;
-    public Vector3 cutsceneRotation; // Euler angles
-
     public float duration = 1.5f;
-    private Vector3 originalPosition;
+
+    private Vector3 followOffset;
     private Quaternion originalRotation;
+
+    private bool followingTopDown;
+
     void Start()
     {
-        originalPosition = cameraTransform.position;
+        if (player == null)
+            player = GameObject.FindGameObjectWithTag("Player").transform;
+
+        // Remember the normal gameplay offset
+        followOffset = cameraTransform.position - player.position;
         originalRotation = cameraTransform.rotation;
     }
+
+    void LateUpdate()
+    {
+        // Keep the top-down view locked to the player's current position
+        // instead of freezing wherever the transition-in coroutine left it.
+        if (!followingTopDown)
+            return;
+
+        cameraTransform.position = player.position + Vector3.up * heightOffset;
+        cameraTransform.rotation = Quaternion.Euler(90f, 0f, 0f);
+    }
+
     public void PlayCutscene()
     {
         StartCoroutine(Play());
@@ -24,6 +42,7 @@ public class CutsceneCamera : MonoBehaviour
 
     public void ResetCameraView()
     {
+        followingTopDown = false;
         StartCoroutine(ResetView());
     }
 
@@ -31,12 +50,9 @@ public class CutsceneCamera : MonoBehaviour
     {
         GamePause.Pause();
 
-        Transform player = GameObject.FindGameObjectWithTag("Player").transform;
-
         Vector3 startPos = cameraTransform.position;
         Quaternion startRot = cameraTransform.rotation;
 
-        Vector3 targetPos = player.position + Vector3.up * heightOffset;
         Quaternion topDownRot = Quaternion.Euler(90f, 0f, 0f);
 
         float t = 0f;
@@ -45,14 +61,16 @@ public class CutsceneCamera : MonoBehaviour
         {
             t += Time.unscaledDeltaTime / duration;
 
+            // Keep following the player while moving overhead
+            Vector3 targetPos = player.position + Vector3.up * heightOffset;
+
             cameraTransform.position = Vector3.Lerp(startPos, targetPos, t);
             cameraTransform.rotation = Quaternion.Slerp(startRot, topDownRot, t);
 
             yield return null;
         }
 
-        cameraTransform.position = targetPos;
-        cameraTransform.rotation = topDownRot;
+        followingTopDown = true;
 
         GamePause.Resume();
     }
@@ -68,13 +86,16 @@ public class CutsceneCamera : MonoBehaviour
         {
             t += Time.unscaledDeltaTime / duration;
 
-            cameraTransform.position = Vector3.Lerp(startPos, originalPosition, t);
+            // Return to the player's current position + original offset
+            Vector3 targetPos = player.position + followOffset;
+
+            cameraTransform.position = Vector3.Lerp(startPos, targetPos, t);
             cameraTransform.rotation = Quaternion.Slerp(startRot, originalRotation, t);
 
             yield return null;
         }
 
-        cameraTransform.position = originalPosition;
+        cameraTransform.position = player.position + followOffset;
         cameraTransform.rotation = originalRotation;
     }
 }
