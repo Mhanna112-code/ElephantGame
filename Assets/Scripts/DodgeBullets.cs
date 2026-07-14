@@ -2,6 +2,9 @@ using UnityEngine;
 
 public class DodgeBullets : MonoBehaviour
 {
+    [Header("Debug")]
+    public bool debugLogs = false;
+
     [Header("Animation")]
     private Animator animator;
 
@@ -42,7 +45,7 @@ public class DodgeBullets : MonoBehaviour
             bulletLayer
         );
 
-        Debug.Log($"Detected bullets: {bullets.Length}");
+        if (debugLogs) Debug.Log($"Detected bullets: {bullets.Length}");
 
         foreach (Collider bullet in bullets)
         {

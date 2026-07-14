@@ -372,6 +372,7 @@ MonoBehaviour:
   obstacleLayers:
     serializedVersion: 2
     m_Bits: 0
+  floorProbeDistance: 0.6
   debugLogs: 1
 --- !u!114 &54528078
 MonoBehaviour:
@@ -8984,6 +8985,7 @@ MonoBehaviour:
   obstacleLayers:
     serializedVersion: 2
     m_Bits: 0
+  floorProbeDistance: 0.6
   debugLogs: 1
 --- !u!1 &1391486754
 GameObject:
@@ -10157,8 +10159,11 @@ MonoBehaviour:
   attackCooldown: 2
   attackWindup: 0.35
   attackDamage: 1
+  contactDamage: 1
+  contactDamageCooldown: 1
   playerScriptsToDisable:
   - {fileID: 0}
+  debugLogs: 1
 --- !u!114 &1578428510
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11039,6 +11044,7 @@ MonoBehaviour:
   obstacleLayers:
     serializedVersion: 2
     m_Bits: 0
+  floorProbeDistance: 0.6
   debugLogs: 1
 --- !u!1001 &1718532973
 PrefabInstance:
@@ -12216,6 +12222,7 @@ GameObject:
   - component: {fileID: 1890610204}
   - component: {fileID: 1890610203}
   - component: {fileID: 1890610202}
+  - component: {fileID: 1890610207}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: Climbable
@@ -12381,6 +12388,25 @@ Transform:
   m_Children: []
   m_Father: {fileID: 543450652852761899}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1890610207
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1890610200}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e61f2e04b09874c3db74040f4a976990, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FollowCamera
+  target: {fileID: 0}
+  captureOnStart: 1
+  worldOffset: {x: 0, y: 0, z: 0}
+  fixedEuler: {x: 0, y: 0, z: 0}
+  active: 1
+  debugLogs: 1
+  logEveryNFrames: 30
 --- !u!1 &1912048619
 GameObject:
   m_ObjectHideFlags: 0
@@ -13955,6 +13981,9 @@ MonoBehaviour:
   leverRenderer: {fileID: 0}
   activatedColor: {r: 0, g: 1, b: 0, a: 1}
   normalColor: {r: 1, g: 1, b: 1, a: 1}
+  trunkTip: {fileID: 0}
+  interactRadius: 0.4
+  debugLogs: 1
 --- !u!1 &61048503622555030
 GameObject:
   m_ObjectHideFlags: 0
