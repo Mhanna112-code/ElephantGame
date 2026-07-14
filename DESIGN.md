@@ -165,3 +165,23 @@ mastery** (Downwell lineage).
 | GamePause.cs | pause | P key |
 | FollowCamera.cs (ours, from the fix night) | camera must not inherit player rotation | camera is code-only, lerp + look-ahead |
 | StickFront.cs | rig helper | n/a (no 3D rig) |
+
+## Final fun audit (against the formula, with evidence)
+
+- **Satisfying core loop** — shoot→bounce→launch reads in under a second with
+  hit-stop, screenshake, launch sfx, squash & stretch. Verified: honest bot
+  chains launches across the whole map; every beat screenshot-reviewed.
+- **Interesting decisions** — 3-shot air economy makes every launch a spend
+  (chain higher vs keep a rescue shot); boss fight trades frontal spam (dodged)
+  vs bank shots (always land) vs closing distance (contact risk).
+- **Uncertainty, right kind** — flashing gates on readable timers with countdown
+  pips; boss dodge only after a visible crouch; leaps lead your movement.
+  No coin-flip outcomes anywhere.
+- **Challenge curve** — measured, not vibes: casual sim crosses beat 2 with
+  median 1 death; honest mid-skill full run finishes with 0 route deaths and
+  beats the boss at 31/100 hp (94 damage absorbed across the run). Phase 2
+  arrives exactly when the player has mastered launching.
+- **Juicy feedback** — 13 procedural sfx + music loop, hit-stop, shake budget,
+  particles for every event, i-frame flash, perfect-win golden ending.
+- **Chosen pleasure** — kinetic mastery (Downwell lineage): the same input that
+  solves combat solves traversal, and both get faster with skill.

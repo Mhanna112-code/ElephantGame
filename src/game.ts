@@ -595,6 +595,7 @@ export function step(s: State, input: Input, dt: number): void {
     cart.x = cp.p.x; cart.y = cp.p.y;
     if (cart.riding) {
       cart.speed = Math.min(cart.speed + 8 * dt, 9);
+      if (rng(s) < 0.35) s.particles.push({ x: cart.x - 0.5, y: cart.y - 0.15, vx: -3 - rng(s) * 3, vy: 1 + rng(s) * 2, life: 0.3, maxLife: 0.3, kind: "spark", hue: 40 });
       cart.dist += cart.speed * dt;
       const np = railPoint(cart.rail, cart.dist);
       cart.x = np.p.x; cart.y = np.p.y;

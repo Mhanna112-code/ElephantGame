@@ -520,8 +520,9 @@ function drawPlayer(ctx: CanvasRenderingContext2D, s: State, mouse: { x: number;
   // i-frame flash
   if (p.iframes > 0 && Math.floor(s.t * 14) % 2 === 0) ctx.globalAlpha = 0.35;
 
-  const squash = 1 + p.landedImpact * 0.35;
-  const stretch = p.grounded ? 1 : 1 + Math.min(0.25, Math.abs(p.vy) / 40);
+  const idle = p.grounded && Math.abs(p.vx) < 0.3 ? Math.sin(s.t * 2.4) * 0.02 : 0;
+  const squash = 1 + p.landedImpact * 0.35 + idle;
+  const stretch = (p.grounded ? 1 : 1 + Math.min(0.25, Math.abs(p.vy) / 40)) - idle;
   const bw = 0.62 * sc * squash;
   const bh = 0.6 * sc * stretch / squash;
   const bob = p.grounded ? Math.abs(Math.sin(p.walkPhase * 3)) * 3 : 0;
