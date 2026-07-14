@@ -2,7 +2,7 @@
 
 **▶ PLAY NOW: https://immortaldemongod.github.io/trunkgame/**
 
-![BIG GRUMP boss fight](media/boss-fight.png)
+![BIG GRUMP boss fight](media/boss-fight-v2.png)
 
 A ground-up TypeScript rebuild of Team Ratateam's game-jam project *ElephantGame*
 (Unity). Not a port — a redesign built from the original's ideas ("the spirit"),
