@@ -1,4 +1,4 @@
-# Overnight build log — status at ~4:30 AM, July 14 2026
+# Overnight build log — FINAL at 8 AM, July 14 2026 (see bottom for closing state)
 
 Goal (from user, binding until 8 AM): rebuild ElephantGame from scratch in TS,
 capture ALL original ideas, iterate design/problem-finding/visuals/playtests,
@@ -53,3 +53,10 @@ attract mode + fresh-start-on-click, GRUMP MODE (21/21 tests).
 - Run bun from ~/trunkgame (cwd resets between Bash calls).
 - The Unity repo work from earlier tonight is on branch
   `elephant-girl-facing-and-animation` — do not touch master (Marc curates).
+
+
+## Closing state (8 AM)
+22/22 tests; final battery green (honest clear 78hp, duel 19s/24dmg, fuzz clean,
+casual 0-8 deaths); 36 commits; artifact label '8am-final'. Late rounds added:
+grump dusk + per-mode bests, ?grump=1 hook, title tagline, anti-respawn-camping
+(+test), demo=boss fix, final gallery. Ship-ready.
