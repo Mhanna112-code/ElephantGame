@@ -77,6 +77,18 @@ export function render(ctx: CanvasRenderingContext2D, s: State, mouse: { x: numb
     }
   }
 
+  // birds (ambient life, parallax)
+  ctx.strokeStyle = "rgba(40,25,60,0.5)"; ctx.lineWidth = 2;
+  for (let i = 0; i < 5; i++) {
+    const bx = ((i * 331 + s.t * (14 + i * 3)) % (VIEW_W + 240)) - 120 - s.camX * 8 % 60;
+    const by = 60 + (i * 67) % 160 + Math.sin(s.t * 2 + i * 2) * 8;
+    const flap = Math.sin(s.t * 7 + i * 1.7) * 5;
+    ctx.beginPath();
+    ctx.moveTo(bx - 7, by - flap * 0.4);
+    ctx.quadraticCurveTo(bx, by + flap, bx + 7, by - flap * 0.4);
+    ctx.stroke();
+  }
+
   // parallax hills
   drawHills(ctx, s, 0.25, PAL.hillFar, 150, 90);
   drawHills(ctx, s, 0.5, PAL.hillNear, 90, 60);
@@ -320,6 +332,21 @@ export function render(ctx: CanvasRenderingContext2D, s: State, mouse: { x: numb
 
   // ---- player ----
   if (!s.player.dead) drawPlayer(ctx, s, mouse);
+  else {
+    const p = s.player;
+    const a = worldToScreen(s, p.x, p.y);
+    const spin = (0.6 - p.deathTimer) * 14;
+    ctx.save();
+    ctx.translate(a.x, a.y - (0.6 - p.deathTimer) * 30);
+    ctx.rotate(spin);
+    ctx.globalAlpha = Math.max(0, p.deathTimer / 0.6);
+    ctx.fillStyle = PAL.skin;
+    ctx.beginPath(); ctx.arc(0, -8, 14, 0, 7); ctx.fill();
+    ctx.fillStyle = PAL.dress;
+    ctx.beginPath(); ctx.ellipse(0, 8, 13, 11, 0, 0, 7); ctx.fill();
+    ctx.restore();
+    ctx.globalAlpha = 1;
+  }
 
   // ---- particles ----
   for (const pt of s.particles) {
