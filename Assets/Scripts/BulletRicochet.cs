@@ -9,6 +9,14 @@ public class BulletRicochet : MonoBehaviour
     public float bounceSpeedMultiplier = 0.8f;
     public int maxBounces = 5;
 
+    [Header("Recoil (issue #13)")]
+    [Tooltip("Push the player away from every floor/wall the bullet ricochets off, not just the first hit.")]
+    public bool recoilOnEveryBounce = true;
+    public float recoilForceMultiplier = 0.8f;
+
+    [Header("Diagnostics")]
+    public bool debugLogs = true;
+
     private int bounceCount;
 
     // ROOT CAUSE (issue #16): the PLAYER object has a stray BulletRicochet component. Its OnBecameInvisible
@@ -28,11 +36,29 @@ public class BulletRicochet : MonoBehaviour
 
     void Start()
     {
-        // ✅ FIX: always target the player directly (not collision object)
-        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        // ROOT CAUSE (issue #13): recoil is applied to the player's Rigidbody, but it was located ONLY via
+        // FindGameObjectWithTag("Player"). In the current scene the player object is mis-tagged "Climbable"
+        // (the boss-update scene rewrite dropped the Player/Trunk/MainCamera tags), so this returned null
+        // and NO recoil ever fired. Find the player robustly by its PlayerController so recoil works no
+        // matter what the tag is; keep the tag lookup as a fast path.
+        GameObject tagged = GameObject.FindGameObjectWithTag("Player");
+        if (tagged != null)
+            playerRb = tagged.GetComponent<Rigidbody>();
 
-        if (player != null)
-            playerRb = player.GetComponent<Rigidbody>();
+        if (playerRb == null)
+        {
+            PlayerController pc = FindFirstObjectByType<PlayerController>();
+            if (pc != null)
+                playerRb = pc.GetComponent<Rigidbody>();
+        }
+
+        if (debugLogs)
+        {
+            if (playerRb != null)
+                Debug.Log($"[Bullet] player Rigidbody found on '{playerRb.name}' -> recoil enabled", this);
+            else
+                Debug.LogWarning("[Bullet] no player Rigidbody found (no 'Player'-tagged object AND no PlayerController) -> recoil disabled", this);
+        }
     }
 
     public void Init(Vector3 dir, float spd)
@@ -107,6 +133,10 @@ public class BulletRicochet : MonoBehaviour
             }
         }
 
+        // Speed at the moment of impact, BEFORE we bleed it off for the bounce. Recoil is scaled off this
+        // so the push does not shrink just because we also reduce the bullet's travel speed below.
+        float impactSpeed = speed;
+
         // ============================
         // REFLECT BULLET
         // ============================
@@ -117,9 +147,12 @@ public class BulletRicochet : MonoBehaviour
         speed *= bounceSpeedMultiplier;
 
         // ============================
-        // PLAYER RECOIL (first hit only)
+        // PLAYER RECOIL off floors / walls (issue #13)
         // ============================
-        if (playerRb != null && bounceCount == 0)
+        // Push the player in the direction opposite the surface (the surface normal), so shooting the
+        // floor/walls launches the player. Fires on every floor/wall ricochet by default (issue #13 asks
+        // for force on these collisions, not just the very first one).
+        if (playerRb != null && (recoilOnEveryBounce || bounceCount == 0))
         {
             Vector3 recoilDir = normal;
 
@@ -129,7 +162,17 @@ public class BulletRicochet : MonoBehaviour
             recoilDir.z = 0f;
             recoilDir.Normalize();
 
-            playerRb.AddForce(recoilDir * speed * 0.8f, ForceMode.Impulse);
+            float force = impactSpeed * recoilForceMultiplier;
+            playerRb.AddForce(recoilDir * force, ForceMode.Impulse);
+
+            if (debugLogs)
+                Debug.Log($"[Bullet] recoil off '{collision.collider.name}' tag='{collision.collider.tag}' " +
+                          $"normal={normal} dir={recoilDir} force={force:F2} bounce={bounceCount}", this);
+        }
+        else if (debugLogs && playerRb == null)
+        {
+            Debug.LogWarning($"[Bullet] hit '{collision.collider.name}' but playerRb is null -> no recoil " +
+                             $"(issue #13 root cause: player is not tagged 'Player')", this);
         }
 
         bounceCount++;

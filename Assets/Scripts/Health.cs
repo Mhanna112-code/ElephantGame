@@ -172,10 +172,17 @@ public class Health : MonoBehaviour
 
 
 
-    void Die()
+    public void Die()
     {
-        Debug.Log("Player Died");
+        // Move player to last checkpoint
+        transform.position = CheckpointManager.Instance.GetCheckpoint();
 
-        // Add death logic here
+        // Reset physics
+        Rigidbody rb = GetComponent<Rigidbody>();
+        rb.linearVelocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
+
+        // Restore health if you have a health system
+        currentHealth = maxHealth;
     }
 }
