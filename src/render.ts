@@ -25,8 +25,8 @@ const PAL = {
   grassDark: "#4e9137",
   dirt: "#8a5a3b",
   dirtDark: "#6e4227",
-  stone: "#9b8fa5",
-  stoneDark: "#6f6280",
+  stone: "#585178",
+  stoneDark: "#494263",
   metal: "#5b7d8a",
   metalDark: "#41606c",
   cloud: "#e9d9ef",
@@ -129,6 +129,8 @@ export function render(ctx: CanvasRenderingContext2D, s: State, mouse: { x: numb
     const a = worldToScreen(s, m.x, m.y + m.h);
     ctx.fillStyle = m.ricochet ? "#57d95a" : "#e0524f";
     ctx.fillRect(a.x, a.y, m.w * sc, m.h * sc);
+    ctx.strokeStyle = "rgba(20,12,30,0.55)"; ctx.lineWidth = 3;
+    ctx.strokeRect(a.x + 1.5, a.y + 1.5, m.w * sc - 3, m.h * sc - 3);
     ctx.fillStyle = "rgba(255,255,255,0.35)";
     ctx.fillRect(a.x, a.y, m.w * sc, 4);
     if (m.flashing) {
@@ -309,13 +311,18 @@ function drawPlatform(ctx: CanvasRenderingContext2D, s: State, p: Platform) {
     ctx.fillStyle = PAL.cloudDark; ctx.fillRect(a.x + 4, a.y + h - 6, w - 8, 4);
   } else {
     ctx.fillStyle = PAL.stone; ctx.fillRect(a.x, a.y, w, h);
-    ctx.fillStyle = PAL.stoneDark;
-    for (let yy = 0; yy < h; yy += 18) {
-      for (let xx = (yy / 18) % 2 === 0 ? 0 : 14; xx < w; xx += 28) {
-        ctx.fillRect(a.x + xx, a.y + yy + 14, 24, 3);
+    // subtle brickwork: darker mortar lines, low contrast
+    ctx.strokeStyle = PAL.stoneDark; ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let yy = 24; yy < h; yy += 24) { ctx.moveTo(a.x, a.y + yy); ctx.lineTo(a.x + w, a.y + yy); }
+    for (let yy = 0; yy < h; yy += 24) {
+      for (let xx = ((yy / 24) % 2 === 0 ? 22 : 44); xx < w; xx += 44) {
+        ctx.moveTo(a.x + xx, a.y + yy); ctx.lineTo(a.x + xx, a.y + Math.min(yy + 24, h));
       }
     }
-    ctx.fillStyle = "rgba(255,255,255,0.15)"; ctx.fillRect(a.x, a.y, w, 4);
+    ctx.stroke();
+    ctx.fillStyle = "rgba(255,255,255,0.12)"; ctx.fillRect(a.x, a.y, w, 4);
+    ctx.fillStyle = "rgba(0,0,0,0.18)"; ctx.fillRect(a.x, a.y + h - 5, w, 5);
   }
 }
 

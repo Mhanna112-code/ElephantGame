@@ -140,9 +140,21 @@ function frame(now: number) {
   }
   audioTick(state);
 
-  render(ctx, state, mouseWorld);
-  drawAmmoAndPreview(mouseWorld);
-  requestAnimationFrame(frame);
+  try {
+    render(ctx, state, mouseWorld);
+    drawAmmoAndPreview(mouseWorld);
+  } catch (e) {
+    ctx.fillStyle = "#300";
+    ctx.fillRect(0, 0, 960, 540);
+    ctx.fillStyle = "#fff";
+    ctx.font = "14px monospace";
+    String(e && (e as Error).stack || e).split("\n").slice(0, 8).forEach((line, i) => ctx.fillText(line.slice(0, 110), 12, 30 + i * 20));
+  }
+  // paint immediately so headless screenshots never race the rAF loop
+for (let i = 0; i < 60; i++) step(state, IDLE_INPUT, DT); // settle spawn
+render(ctx, state, { x: state.player.x + 3, y: state.player.y + 1 });
+
+requestAnimationFrame(frame);
 }
 
 function drawAmmoAndPreview(mouseWorld: { x: number; y: number }) {
@@ -190,5 +202,9 @@ window.__step = (inp, seconds) => {
   for (let i = 0; i < n; i++) step(state, { ...IDLE_INPUT, ...inp }, DT);
   render(ctx, state, { x: state.player.aimX, y: state.player.aimY });
 };
+
+// paint immediately so headless screenshots never race the rAF loop
+for (let i = 0; i < 60; i++) step(state, IDLE_INPUT, DT); // settle the spawn
+render(ctx, state, { x: state.player.x + 3, y: state.player.y + 1 });
 
 requestAnimationFrame(frame);
