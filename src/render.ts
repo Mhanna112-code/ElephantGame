@@ -84,6 +84,18 @@ export function render(ctx: CanvasRenderingContext2D, s: State, mouse: { x: numb
   ctx.save();
   ctx.translate(shx, shy);
 
+  // ---- flora (Tree/MushroomBud/Stone from the original's prop shelf) ----
+  for (let i = 0; i < s.platforms.length; i++) {
+    const p = s.platforms[i];
+    if (p.deco !== "grass" || p.w < 4) continue;
+    const h1 = ((i * 2654435761) >>> 0) / 4294967296;
+    const h2 = (((i + 7) * 2246822519) >>> 0) / 4294967296;
+    const baseY = p.y + p.h;
+    if (h1 < 0.6) drawTree(ctx, s, p.x + 1 + h1 * (p.w - 2), baseY, 0.8 + h2 * 0.5);
+    if (h2 < 0.5) drawMushroom(ctx, s, p.x + p.w - 1.2 - h2 * (p.w - 2.4), baseY, 0.5 + h1 * 0.3);
+    if ((h1 + h2) % 0.3 < 0.15) drawStone(ctx, s, p.x + (p.w * (h1 + h2)) % p.w, baseY);
+  }
+
   // ---- platforms ----
   for (const p of s.platforms) drawPlatform(ctx, s, p);
 
@@ -332,6 +344,44 @@ export function render(ctx: CanvasRenderingContext2D, s: State, mouse: { x: numb
 
   // ---- HUD ----
   drawHud(ctx, s);
+}
+
+function drawTree(ctx: CanvasRenderingContext2D, s: State, x: number, y: number, size: number) {
+  const sc = BASE_SCALE * s.zoom;
+  const a = worldToScreen(s, x, y);
+  if (a.x < -80 || a.x > VIEW_W + 80) return;
+  const sway = Math.sin(s.t * 0.9 + x) * 2;
+  ctx.fillStyle = "#6e4a30";
+  ctx.fillRect(a.x - 3, a.y - 1.6 * size * sc, 6, 1.6 * size * sc);
+  ctx.fillStyle = "#5da84e";
+  ctx.beginPath(); ctx.arc(a.x + sway, a.y - 1.9 * size * sc, 0.55 * size * sc, 0, 7); ctx.fill();
+  ctx.beginPath(); ctx.arc(a.x - 0.35 * size * sc + sway, a.y - 1.55 * size * sc, 0.4 * size * sc, 0, 7); ctx.fill();
+  ctx.beginPath(); ctx.arc(a.x + 0.38 * size * sc + sway, a.y - 1.5 * size * sc, 0.42 * size * sc, 0, 7); ctx.fill();
+  ctx.fillStyle = "rgba(255,255,255,0.12)";
+  ctx.beginPath(); ctx.arc(a.x - 0.12 * size * sc + sway, a.y - 2.05 * size * sc, 0.22 * size * sc, 0, 7); ctx.fill();
+}
+
+function drawMushroom(ctx: CanvasRenderingContext2D, s: State, x: number, y: number, size: number) {
+  const sc = BASE_SCALE * s.zoom;
+  const a = worldToScreen(s, x, y);
+  if (a.x < -60 || a.x > VIEW_W + 60) return;
+  ctx.fillStyle = "#e8dcc9";
+  ctx.fillRect(a.x - 3, a.y - 0.55 * size * sc, 6, 0.55 * size * sc);
+  ctx.fillStyle = "#d95a48";
+  ctx.beginPath(); ctx.ellipse(a.x, a.y - 0.55 * size * sc, 0.42 * size * sc, 0.26 * size * sc, 0, Math.PI, 0); ctx.fill();
+  ctx.fillStyle = "rgba(255,255,255,0.7)";
+  ctx.beginPath(); ctx.arc(a.x - 0.15 * size * sc, a.y - 0.62 * size * sc, 2.2, 0, 7); ctx.fill();
+  ctx.beginPath(); ctx.arc(a.x + 0.12 * size * sc, a.y - 0.68 * size * sc, 1.7, 0, 7); ctx.fill();
+}
+
+function drawStone(ctx: CanvasRenderingContext2D, s: State, x: number, y: number) {
+  const sc = BASE_SCALE * s.zoom;
+  const a = worldToScreen(s, x, y);
+  if (a.x < -40 || a.x > VIEW_W + 40) return;
+  ctx.fillStyle = "#7a7189";
+  ctx.beginPath(); ctx.ellipse(a.x, a.y - 4, 9, 6, 0, Math.PI, 0); ctx.fill();
+  ctx.fillStyle = "rgba(255,255,255,0.15)";
+  ctx.beginPath(); ctx.ellipse(a.x - 2, a.y - 6, 3, 2, 0, 0, 7); ctx.fill();
 }
 
 function drawHills(ctx: CanvasRenderingContext2D, s: State, parallax: number, color: string, base: number, amp: number) {
