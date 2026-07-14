@@ -29,6 +29,7 @@ export interface MovingPlatform extends Rect {
   speed: number; t: number; dir: 1 | -1;
   ricochet: boolean; // green = bullets bounce; red = bullets die
   flashing?: { interval: number; timer: number }; // toggles ricochet
+  oneWay?: boolean; // player passes from below, lands on top (bullets still interact)
 }
 
 export interface SpikeBall { x: number; y: number; r: number }
@@ -45,7 +46,7 @@ export interface Door extends Rect { id: string; open: boolean; openAmount: numb
 export interface PushBox extends Rect { vx: number; onPlate: boolean }
 export interface Plate extends Rect { pressed: boolean; targets: string[] }
 
-export interface WindZone extends Rect { force: number }
+export interface WindZone extends Rect { force: number; onTime: number; offTime: number; timer: number; active: boolean }
 
 export interface Rail { points: Vec[]; } // polyline, param by arc length
 export interface Minecart {
@@ -80,6 +81,7 @@ export interface Boss {
   hitFlash: number;
   faceDir: 1 | -1;
   dodgeCooldown: number;
+  dodgeTelegraph: number;
 }
 
 export interface Particle {
@@ -117,6 +119,9 @@ export interface Player {
   walkPhase: number;
   landedImpact: number; // for squash-stretch, set on landing
   inCart: boolean;
+  ammo: number;
+  maxAmmo: number;
+  dryFire: number; // toast cooldown for empty-clip feedback
 }
 
 export interface State {
@@ -148,6 +153,7 @@ export interface State {
   deathY: number;       // below this = death
   camX: number; camY: number;
   shake: number;
+  hitStop: number;
   rngState: number;
   won: boolean;
   wonTimer: number;
@@ -179,25 +185,26 @@ export function makeLevel(): State {
   ground(-2, 24);
   wall(-3, -3, 14); // left boundary
 
-  // 2 GAP FIELD x 22..52 (islands over death pit)
-  ground(28, 6);
-  ground(40, 5);
-  ground(48, 8);
+  // 2 GAP FIELD x 22..52 (islands over a death pit; gaps ramp 4u -> 5u -> 4.5u)
+  ground(26, 5);
+  ground(36, 4);
+  ground(44.5, 11.5);
 
   // 3 SPIKE ALLEY + MINECART x 56..88
   ground(56, 34, 0, 3, "stone");
   // spike floor is decorated by strip (damage), cart rides above it
 
   // 4 TOWER FIELD x 90..126 — climb via one-way platforms
-  ground(90, 8);
+  ground(90, 11);        // runs under the ladder to tower A: missed launches retry, not die
+  ground(101, 25, 0, 3, "stone"); // tower-field floor: falls are recoverable, canyons escape via chains
   wall(101, -3, 9, 3);   // tower A y -3..6
   wall(110, -3, 13, 3);  // tower B y -3..10
   wall(119, -3, 7, 3);   // tower C
-  plat(98.5, 2.5, 3, true, "metal");
-  plat(103.5, 5, 3, true, "metal");
-  plat(107, 8, 3, true, "metal");
-  plat(113.5, 11.5, 3, true, "metal");
-  plat(119.5, 6.5, 3, true, "metal");
+  plat(95.5, 2.4, 3, true, "metal");   // step 1: launch straight up from the ground
+  plat(97.5, 4.6, 3.5, true, "metal"); // step 2: single clean launch from step 1; chains are speed-tech, not a wall
+  plat(105.5, 7.8, 3, true, "metal");  // step 3: comfortable launch from tower A top
+  plat(114.5, 11.2, 3, true, "metal"); // bridge toward the drop to tower C
+  plat(116.6, 2.1, 2, true, "metal");  // canyon exit ledge: fall recovery is a two-hop staircase
   ground(126, 12, 0, 3);
 
   // 5 PUZZLE ROOM x 138..160 (door blocks exit)
@@ -205,35 +212,40 @@ export function makeLevel(): State {
   wall(138, 0, 8);        // room left wall above entrance? no—entrance at floor: raise wall with gap
   P.pop();                // rethink: entrance opening — low ceiling instead
   wall(138, 5, 6);        // decorative upper wall
-  wall(159, 0, 2.2);      // door frame base right — door sits at x 154
-
-  // 6 WIND SHAFT x 160..176, climbs y 0..44
-  wall(160, 0, 46, 1.5);
+  // 6 WIND SHAFT x 160..176, climbs y 0..44 — entered at ground level through the doorway
+  wall(160, 3.4, 42.6, 1.5); // left shaft wall floats above a walk-in entrance
   wall(174.5, 0, 46, 1.5);
   ground(160, 16, 0, 3, "stone"); // shaft floor (entered through door)
 
   // 7 BOSS ARENA y 44 top, x 152..184
-  P.push({ x: 152, y: 44, w: 34, h: 1.5, deco: "cloud" }); // arena floor
+  P.push({ x: 152, y: 44, w: 14, h: 1.5, deco: "cloud" }); // arena floor (left of shaft exit)
+  P.push({ x: 171, y: 44, w: 15, h: 1.5, deco: "cloud" }); // arena floor (right of shaft exit)
+  P.push({ x: 166, y: 44, w: 5, h: 0.4, oneWay: true, deco: "cloud" }); // shaft exit: pass from below, walk on top
   wall(151, 44, 10);  // arena left wall
   wall(185, 44, 10);  // arena right wall
 
   const movers: MovingPlatform[] = [
     // gap field mover (carries across widest gap)
-    { x: 34.5, y: 1.2, w: 3, h: 0.5, x0: 34.5, x1: 34.5, y0: 1.2, y1: 1.2, speed: 0, t: 0, dir: 1, ricochet: true },
+    { x: 32.2, y: 0.6, w: 2.6, h: 0.5, x0: 32.2, x1: 32.2, y0: 0.6, y1: 0.6, speed: 0, t: 0, dir: 1, ricochet: true },
     // tower field: flashing ricochet gate (times your bounce shots)
-    { x: 111, y: 14.5, w: 3.5, h: 0.5, x0: 108, x1: 114, y0: 14.5, y1: 14.5, speed: 1.6, t: 0, dir: 1, ricochet: false, flashing: { interval: 1.4, timer: 0 } },
+    { x: 111, y: 16.2, w: 3.5, h: 0.5, x0: 108, x1: 114, y0: 16.2, y1: 16.2, speed: 1.6, t: 0, dir: 1, ricochet: false, flashing: { interval: 1.4, timer: 0 } },
     // wind shaft moving covers
-    { x: 163, y: 14, w: 3.5, h: 0.5, x0: 161.8, x1: 169.5, y0: 14, y1: 14, speed: 2.2, t: 0, dir: 1, ricochet: true },
-    { x: 168, y: 26, w: 3.5, h: 0.5, x0: 161.8, x1: 169.5, y0: 26, y1: 26, speed: 2.8, t: 0, dir: -1, ricochet: false, flashing: { interval: 1.1, timer: 0.5 } },
-    { x: 164, y: 38, w: 3.5, h: 0.5, x0: 161.8, x1: 169.5, y0: 38, y1: 38, speed: 3.2, t: 0, dir: 1, ricochet: true },
+    { x: 163, y: 14, w: 5, h: 0.5, x0: 161.8, x1: 169.5, y0: 14, y1: 14, speed: 2.2, t: 0, dir: 1, ricochet: true, oneWay: true },
+    { x: 168, y: 26, w: 5, h: 0.5, x0: 161.8, x1: 169.5, y0: 26, y1: 26, speed: 2.8, t: 0, dir: -1, ricochet: false, flashing: { interval: 1.1, timer: 0.5 }, oneWay: true },
+    { x: 164, y: 38, w: 5, h: 0.5, x0: 161.8, x1: 169.5, y0: 38, y1: 38, speed: 3.2, t: 0, dir: 1, ricochet: true, oneWay: true },
+    // tower field: second gate, offset phase (develop: plan a two-bounce)
+    { x: 116, y: 10.5, w: 3, h: 0.5, x0: 116, x1: 121, y0: 10.5, y1: 10.5, speed: 1.2, t: 0.5, dir: -1, ricochet: true, flashing: { interval: 1.4, timer: 0.7 } },
+    // boss arena mirrors (conclude: bank shots behind the boss beat the dodge)
+    { x: 154.5, y: 47.5, w: 0.6, h: 3.2, x0: 154.5, x1: 154.5, y0: 47.5, y1: 47.5, speed: 0, t: 0, dir: 1, ricochet: true },
+    { x: 183, y: 47.5, w: 0.6, h: 3.2, x0: 183, x1: 183, y0: 47.5, y1: 47.5, speed: 0, t: 0, dir: 1, ricochet: false, flashing: { interval: 1.6, timer: 0 } },
   ];
 
   const spikeBalls: SpikeBall[] = [
-    { x: 106, y: 7.2, r: 0.75 },   // between towers
-    { x: 116.6, y: 13.4, r: 0.75 },
-    { x: 122.5, y: 9.0, r: 0.75 },
-    { x: 167.5, y: 20, r: 0.9 },   // wind shaft
-    { x: 165.5, y: 32, r: 0.9 },
+    { x: 109.6, y: 6.2, r: 0.75 },  // guards the gap right of step 3 (overshoot punish)
+    { x: 118.9, y: 15.2, r: 0.75 }, // high above the bridge corner: only wild chains reach it
+    { x: 124.8, y: 7.2, r: 0.75 },  // right of tower C: overshooting the drop stings
+    { x: 164.2, y: 20, r: 0.9 },   // wind shaft (left)
+    { x: 171.2, y: 32, r: 0.9 },   // wind shaft (right)
   ];
 
   const spikeStrips: SpikeStrip[] = [
@@ -259,7 +271,7 @@ export function makeLevel(): State {
   doors.push({ id: "leverguard", x: 147.9, y: 0, w: 1.4, h: 2.2, open: false, openAmount: 0 });
 
   const winds: WindZone[] = [
-    { x: 161.5, y: 0, w: 13, h: 44, force: 30 },
+    { x: 161.5, y: 0, w: 13, h: 44, force: 34, onTime: 2.6, offTime: 0.8, timer: 0, active: true },
   ];
 
   const rail: Rail = {
@@ -274,7 +286,7 @@ export function makeLevel(): State {
   const boss: Boss = {
     x: 179, y: 45.4 + 1.1, vx: 0, vy: 0, w: 2.6, h: 2.2,
     hp: 100, maxHp: 100, phase: "waiting", timer: 0,
-    attackCooldown: 0, leapCooldown: 4, hitFlash: 0, faceDir: -1, dodgeCooldown: 0,
+    attackCooldown: 0, leapCooldown: 4, hitFlash: 0, faceDir: -1, dodgeCooldown: 0, dodgeTelegraph: 0,
   };
 
   const signs: Sign[] = [
@@ -285,12 +297,13 @@ export function makeLevel(): State {
     { x: 24, y: 1.6, text: "gaps ahead — launch across!" },
     { x: 57.5, y: 4.2, text: "press E — ride the cart" },
     { x: 92, y: 1.6, text: "shots BOUNCE off green" },
+    { x: 96.5, y: 1.6, text: "chain shots mid-air to climb higher!" },
     { x: 139.7, y: 4.6, text: "box → plate → lever → door" },
     { x: 161.7, y: 4.5, text: "the wind carries you — steer!" },
   ];
 
   const checkpoints: Vec[] = [
-    { x: 29, y: 1.5 },     // gap field start
+    { x: 27.5, y: 1.5 },   // gap field start
     { x: 51, y: 1.5 },     // before cart
     { x: 92, y: 1.5 },     // tower field
     { x: 139.5, y: 1.5 },  // puzzle room
@@ -300,6 +313,8 @@ export function makeLevel(): State {
 
   const dodgers: Dodger[] = [
     { x: 121, y: 9.5, homeX: 121, homeY: 9.5, hp: 2, dead: false, phase: 0, dodgeVx: 0, hitFlash: 0 },
+    { x: 68, y: 5.5, homeX: 68, homeY: 5.5, hp: 2, dead: false, phase: 1, dodgeVx: 0, hitFlash: 0 },
+    { x: 78, y: 6, homeX: 78, homeY: 6, hp: 2, dead: false, phase: 3, dodgeVx: 0, hitFlash: 0 },
     { x: 131, y: 4.5, homeX: 131, homeY: 4.5, hp: 2, dead: false, phase: 2, dodgeVx: 0, hitFlash: 0 },
     { x: 170, y: 33, homeX: 170, homeY: 33, hp: 2, dead: false, phase: 4, dodgeVx: 0, hitFlash: 0 },
   ];
@@ -318,6 +333,7 @@ export function makeLevel(): State {
     { x: 144.1, y: 6.4, taken: false },  // spring shelf reward
     { x: 154, y: 46.6, taken: false },   // before boss
     { x: 92.5, y: 1.2, taken: false },   // after cart
+    { x: 72, y: 4.2, taken: false },     // over the rail — shoot nothing, just lean and grab
   ];
   // heart shelf platform (reach via spring)
   P.push({ x: 142.6, y: 5.2, w: 3, h: 0.4, oneWay: true, deco: "metal" });
@@ -328,6 +344,7 @@ export function makeLevel(): State {
     hp: 100, maxHp: 100, iframes: 0, shootCooldown: 0,
     aimX: 6, aimY: 2, aimActive: 0,
     dead: false, deathTimer: 0, walkPhase: 0, landedImpact: 0, inCart: false,
+    ammo: 3, maxAmmo: 3, dryFire: 0,
   };
 
   return {
@@ -335,7 +352,7 @@ export function makeLevel(): State {
     platforms: P, movers, spikeBalls, spikeStrips, levers, doors, boxes, plates, winds,
     cart, boss, signs, dodgers, rings, springs, hearts, tether: null,
     zoom: 1, zoomTarget: 1, paused: false, checkpoints, checkpoint: { x: 2.5, y: 1.5 },
-    deathY: -14, camX: player.x, camY: player.y + 1.5, shake: 0,
+    deathY: -14, camX: player.x, camY: player.y + 1.5, shake: 0, hitStop: 0,
     rngState: 1337, won: false, wonTimer: 0, bossArenaX: 156,
     stats: { shots: 0, bounces: 0, launches: 0, deaths: 0, damageTaken: 0 },
     toast: { text: "", timer: 0 },
@@ -355,7 +372,7 @@ interface SolidHit { rect: Rect; mover?: MovingPlatform }
 
 function solids(s: State, forBullet = false): SolidHit[] {
   const out: SolidHit[] = [];
-  for (const p of s.platforms) if (!p.oneWay || !forBullet) out.push({ rect: p });
+  for (const p of s.platforms) out.push({ rect: p }); // one-ways included; callers apply direction rules
   for (const m of s.movers) out.push({ rect: m, mover: m });
   for (const d of s.doors) if (d.openAmount < 0.95) {
     out.push({ rect: { x: d.x, y: d.y + d.openAmount * d.h, w: d.w, h: d.h * (1 - d.openAmount) } });
@@ -367,9 +384,9 @@ function solids(s: State, forBullet = false): SolidHit[] {
 // Move an AABB with collision resolution; returns grounded + what we stand on.
 function moveBody(
   s: State, body: Rect, vel: Vec, dt: number,
-  opts: { oneWays?: boolean } = {},
+  exclude?: Rect,
 ): { grounded: boolean; hitHead: boolean; hitWall: boolean; standingOn: MovingPlatform | null } {
-  const sol = solids(s);
+  const sol = solids(s).filter(h => h.rect !== exclude && !(h.rect === (exclude as unknown)));
   let grounded = false, hitHead = false, hitWall = false;
   let standingOn: MovingPlatform | null = null;
 
@@ -378,6 +395,13 @@ function moveBody(
   for (const { rect } of sol) {
     if (isOneWay(s, rect)) continue;
     if (overlaps(body, rect)) {
+      // LEDGE FORGIVENESS: falling into a wall whose top edge is barely above the
+      // feet pops the body up onto the ledge instead of zeroing vx into the face.
+      const ledgeTop = rect.y + rect.h;
+      if (vel.y <= 0.5 && ledgeTop - body.y <= 0.5 && ledgeTop - body.y > 0) {
+        body.y = ledgeTop;
+        continue;
+      }
       if (vel.x > 0) body.x = rect.x - body.w;
       else if (vel.x < 0) body.x = rect.x + rect.w;
       vel.x = 0; hitWall = true;
@@ -391,7 +415,7 @@ function moveBody(
     const oneWay = isOneWay(s, rect);
     if (vel.y <= 0) {
       // falling: land only if we were above (always for solids, conditionally for one-ways)
-      if (!oneWay || prevBottom >= rect.y + rect.h - 0.02) {
+      if (!oneWay || prevBottom >= rect.y + rect.h - 0.15) {
         body.y = rect.y + rect.h;
         vel.y = 0; grounded = true;
         if (mover) standingOn = mover;
@@ -406,8 +430,7 @@ function moveBody(
 
 const oneWaySet = new WeakSet<Rect>();
 function isOneWay(s: State, r: Rect): boolean {
-  // platforms carry their own flag; cache identity for movers/doors (never one-way)
-  return (r as Platform).oneWay === true;
+  return (r as Platform).oneWay === true; // platforms AND movers may carry the flag
 }
 
 function railPoint(rail: Rail, dist: number): { p: Vec; done: boolean } {
@@ -436,6 +459,7 @@ function damagePlayer(s: State, dmg: number, knockX = 0, knockY = 0) {
   if (p.iframes > 0 || p.dead || s.won) return;
   p.hp = Math.max(0, p.hp - dmg);
   p.iframes = 1.2;
+  s.hitStop = Math.max(s.hitStop, 0.07);
   p.vx += knockX; p.vy += knockY;
   s.shake = Math.max(s.shake, 0.5);
   s.stats.damageTaken += dmg;
@@ -446,7 +470,7 @@ function damagePlayer(s: State, dmg: number, knockX = 0, knockY = 0) {
 function killPlayer(s: State) {
   const p = s.player;
   if (p.dead) return;
-  p.dead = true; p.deathTimer = 1.2;
+  p.dead = true; p.deathTimer = 0.6;
   s.stats.deaths++;
   s.shake = 1;
   spawnParticles(s, p.x, p.y, 24, "hit", 0);
@@ -466,6 +490,7 @@ export const DT = 1 / 120;
 
 export function step(s: State, input: Input, dt: number): void {
   if (s.paused) return;
+  if (s.hitStop > 0) { s.hitStop -= dt; return; }
   s.t += dt;
   const p = s.player;
 
@@ -535,7 +560,7 @@ export function step(s: State, input: Input, dt: number): void {
     b.vx *= Math.pow(0.02, dt); // strong friction
     if (Math.abs(b.vx) > 0.05) {
       const vel = { x: b.vx, y: 0 };
-      moveBody(s, b, vel, dt);
+      moveBody(s, b, vel, dt, b);
       b.vx = vel.x;
     }
     // gravity-lite: keep on floor (boxes live on flat ground in this level)
@@ -583,9 +608,12 @@ export function step(s: State, input: Input, dt: number): void {
       if (Math.abs(p.vx) <= dv) p.vx = 0; else p.vx -= Math.sign(p.vx) * dv;
     }
 
-    // wind
+    // wind (pulses: floating alone stalls during the off-phase — recoil chains carry you)
     for (const w of s.winds) {
-      if (overlaps(playerRect(p), w)) {
+      w.timer += dt;
+      if (w.active && w.timer >= w.onTime) { w.active = false; w.timer = 0; }
+      else if (!w.active && w.timer >= w.offTime) { w.active = true; w.timer = 0; }
+      if (w.active && overlaps(playerRect(p), w)) {
         p.vy += w.force * dt;
         p.vy = Math.min(p.vy, 7.5); // terminal updraft
         if (rng(s) < 0.25) s.particles.push({ x: p.x + (rng(s) - 0.5) * 2, y: p.y - 1, vx: 0, vy: 6, life: 0.4, maxLife: 0.4, kind: "puff", hue: 190 });
@@ -630,7 +658,10 @@ export function step(s: State, input: Input, dt: number): void {
           const d = Math.hypot(s.rings[i].x - p.x, s.rings[i].y - p.y);
           if (d < bestD) { bestD = d; best = i; }
         }
-        if (best >= 0) s.tether = { ringIndex: best, len: Math.max(1.2, Math.min(bestD, 3.4)) };
+        if (best >= 0) {
+          s.tether = { ringIndex: best, len: Math.max(1.2, Math.min(bestD, 3.4)) };
+          p.ammo = p.maxAmmo; // grabbing the world = reload
+        }
       }
       if (s.tether) {
         const ring = s.rings[s.tether.ringIndex];
@@ -654,16 +685,22 @@ export function step(s: State, input: Input, dt: number): void {
   if (input.shootHeld || input.shoot) p.aimActive = 0.6;
   else p.aimActive = Math.max(0, p.aimActive - dt);
 
-  // ---- shooting ----
+  // ---- shooting (shot economy: grounded/riding = full clip, airborne shots limited) ----
   p.shootCooldown = Math.max(0, p.shootCooldown - dt);
-  if (input.shoot && p.shootCooldown <= 0 && !p.dead && !s.won) {
+  p.dryFire = Math.max(0, p.dryFire - dt);
+  if (p.grounded || cart.riding) p.ammo = p.maxAmmo;
+  if (input.shoot && p.shootCooldown <= 0 && !p.dead && !s.won && p.ammo <= 0) {
+    if (p.dryFire <= 0) { s.toast = { text: "out of puff! land to reload", timer: 1 }; p.dryFire = 1.1; }
+  }
+  if (input.shoot && p.shootCooldown <= 0 && !p.dead && !s.won && p.ammo > 0) {
     const dx = input.aimX - p.x, dy = input.aimY - (p.y + 0.3);
     const len = Math.hypot(dx, dy) || 1;
     s.bullets.push({
-      x: p.x + (dx / len) * 0.9, y: p.y + 0.3 + (dy / len) * 0.9,
+      x: p.x + (dx / len) * 0.35, y: p.y + 0.3 + (dy / len) * 0.35,
       dx: dx / len, dy: dy / len, speed: 26, bounces: 0, dead: false, age: 0,
     });
     p.shootCooldown = 0.28;
+    if (!p.grounded && !cart.riding) p.ammo--;
     s.stats.shots++;
     // small shoulder kick
     p.vx -= (dx / len) * 0.8;
@@ -675,7 +712,7 @@ export function step(s: State, input: Input, dt: number): void {
   for (const b of s.bullets) {
     if (b.dead) continue;
     b.age += dt;
-    if (b.age > 6) { b.dead = true; continue; }
+    if (b.age > 3.5) { b.dead = true; continue; }
     const steps = 3; // substeps for fast bullets
     for (let i = 0; i < steps && !b.dead; i++) {
       const sub = dt / steps;
@@ -687,22 +724,17 @@ export function step(s: State, input: Input, dt: number): void {
       const boss = s.boss;
       if (boss.phase !== "waiting" && boss.phase !== "dead" &&
           overlaps(br, { x: boss.x - boss.w / 2, y: boss.y - boss.h / 2, w: boss.w, h: boss.h })) {
-        // dodge chance (the DodgeBullets spirit): boss sidesteps if off cooldown
-        if (boss.dodgeCooldown <= 0 && rng(s) < 0.4 && boss.phase === "chase") {
-          boss.dodgeCooldown = 1.2;
-          boss.vx = (b.dx > 0 ? 1 : -1) * 9; // dash same direction bullet travels (out of its path)
-          s.toast = { text: "he dodged!", timer: 0.8 };
-        } else {
-          boss.hp = Math.max(0, boss.hp - 8);
-          boss.hitFlash = 0.15;
-          b.dead = true;
-          s.shake = Math.max(s.shake, 0.2);
-          spawnParticles(s, b.x, b.y, 8, "spark", 20);
-          if (boss.hp <= 0 && boss.phase !== "dead") {
-            boss.phase = "dead"; boss.timer = 0;
-            s.won = true;
-            s.toast = { text: "BOSS DOWN!", timer: 4 };
-          }
+        boss.hp = Math.max(0, boss.hp - 8);
+        boss.hitFlash = 0.15;
+        b.dead = true;
+        s.shake = Math.max(s.shake, 0.2);
+        s.hitStop = Math.max(s.hitStop, 0.05);
+        spawnParticles(s, b.x, b.y, 8, "spark", 20);
+        if (boss.hp <= 0 && boss.phase !== "dead") {
+          boss.phase = "dead"; boss.timer = 0;
+          s.hitStop = 0.25;
+          s.won = true;
+          s.toast = { text: "BOSS DOWN!", timer: 4 };
         }
         continue;
       }
@@ -731,6 +763,9 @@ export function step(s: State, input: Input, dt: number): void {
       // world bounce
       for (const { rect, mover } of solids(s, true)) {
         if (!overlaps(br, rect)) continue;
+        // one-way: bullets bounce only when traveling down onto the top face (same
+        // rule as feet) — shooting up through a platform still works
+        if (isOneWay(s, rect) && !(b.dy < 0 && b.y > rect.y + rect.h - 0.2)) continue;
         if (mover && !mover.ricochet) { b.dead = true; spawnParticles(s, b.x, b.y, 5, "puff", 0); break; }
         // reflect: find smallest penetration axis
         const penL = b.x + 0.14 - rect.x;
@@ -758,11 +793,13 @@ export function step(s: State, input: Input, dt: number): void {
           let ix = nx, iy = ny;
           if (ny > 0.5) iy += 1; // ground bounces boost extra up (the original's trick)
           const il = Math.hypot(ix, iy) || 1;
-          const force = b.speed * 0.55 * falloff;
+          const force = b.speed * 0.6 * falloff;
           p.vx += (ix / il) * force;
           p.vy += (iy / il) * force;
           s.stats.launches++;
           s.shake = Math.max(s.shake, 0.25);
+          s.hitStop = Math.max(s.hitStop, 0.03);
+          if (mover && mover.ricochet) p.ammo = p.maxAmmo; // green bounce = reload
           p.grounded = false;
         }
         if (b.bounces >= 5) b.dead = true;
@@ -931,6 +968,25 @@ function updateBoss(s: State, input: Input, dt: number) {
       return;
     case "chase": {
       boss.faceDir = p.x < boss.x ? -1 : 1;
+      // READABLE DODGE: only bullets entering his facing arc trigger it, after a
+      // visible crouch telegraph. Bank shots off the mirrors arrive from behind.
+      boss.dodgeTelegraph = Math.max(0, boss.dodgeTelegraph - dt);
+      if (boss.dodgeTelegraph > 0 && boss.dodgeTelegraph - dt <= 0) {
+        boss.vx = -boss.faceDir * 11; // hop backward out of the shot line
+        boss.dodgeCooldown = 1.6;
+      }
+      if (boss.dodgeCooldown <= 0 && boss.dodgeTelegraph <= 0) {
+        for (const b of s.bullets) {
+          const toBossX = boss.x - b.x;
+          // bullet is heading at the boss AND coming from the side he faces
+          const headingAtBoss = Math.sign(b.dx) === Math.sign(toBossX) && b.dx !== 0;
+          const fromFacingSide = Math.sign(-toBossX) === boss.faceDir;
+          if (headingAtBoss && fromFacingSide && Math.abs(toBossX) < 6 && Math.abs(b.y - boss.y) < 2.5) {
+            boss.dodgeTelegraph = 0.22;
+            break;
+          }
+        }
+      }
       const dist = Math.abs(p.x - boss.x);
       boss.leapCooldown -= dt;
       boss.attackCooldown -= dt;
@@ -1004,6 +1060,40 @@ function updateParticles(s: State, dt: number) {
     else pt.vy -= 1 * dt;
   }
   s.particles = s.particles.filter(pt => pt.life > 0);
+}
+
+// Trajectory preview: march the shot direction, reflect once, return polyline.
+export function previewPath(s: State, fx: number, fy: number, dx: number, dy: number): Vec[] {
+  const pts: Vec[] = [{ x: fx, y: fy }];
+  let x = fx, y = fy, vx = dx, vy = dy;
+  let bounces = 0;
+  const sol = solids(s, true);
+  for (let i = 0; i < 240; i++) {
+    x += vx * 0.12; y += vy * 0.12;
+    const br = { x: x - 0.14, y: y - 0.14, w: 0.28, h: 0.28 };
+    for (const { rect, mover } of sol) {
+      if (!overlaps(br, rect)) continue;
+      if (isOneWay(s, rect) && !(vy < 0 && y > rect.y + rect.h - 0.2)) continue;
+      if (mover && !mover.ricochet) { pts.push({ x, y }); return pts; }
+      const penL = x + 0.14 - rect.x, penR = rect.x + rect.w - (x - 0.14);
+      const penB = y + 0.14 - rect.y, penT = rect.y + rect.h - (y - 0.14);
+      const m = Math.min(penL, penR, penB, penT);
+      let nx = 0, ny = 0;
+      if (m === penL) { nx = -1; x = rect.x - 0.15; }
+      else if (m === penR) { nx = 1; x = rect.x + rect.w + 0.15; }
+      else if (m === penB) { ny = -1; y = rect.y - 0.15; }
+      else { ny = 1; y = rect.y + rect.h + 0.15; }
+      const dot = vx * nx + vy * ny;
+      vx -= 2 * dot * nx; vy -= 2 * dot * ny;
+      pts.push({ x, y });
+      bounces++;
+      if (bounces >= 2) return pts;
+      break;
+    }
+    if (i % 6 === 0) pts.push({ x, y });
+  }
+  pts.push({ x, y });
+  return pts;
 }
 
 function updateCamera(s: State, dt: number) {
