@@ -298,6 +298,7 @@ export function makeLevel(): State {
     { x: 57.5, y: 4.2, text: "press E — ride the cart" },
     { x: 92, y: 1.6, text: "shots BOUNCE off green" },
     { x: 96.5, y: 1.6, text: "chain shots mid-air to climb higher!" },
+    { x: 93.8, y: 3.2, text: "hold E by a ring — hang & swing" },
     { x: 139.7, y: 4.6, text: "box → plate → lever → door" },
     { x: 161.7, y: 4.5, text: "the wind carries you — steer!" },
   ];
