@@ -59,6 +59,9 @@ public class BossFightController : MonoBehaviour
     private static readonly int AttackHash = Animator.StringToHash("Attack");
     private static readonly int DieHash = Animator.StringToHash("Die");
 
+    [Header("Diagnostics")]
+    public bool debugLogs = true;
+
     void Awake()
     {
         rb = GetComponent<Rigidbody>();
@@ -66,6 +69,23 @@ public class BossFightController : MonoBehaviour
 
         rb.constraints = RigidbodyConstraints.FreezeRotation;
         rb.interpolation = RigidbodyInterpolation.Interpolate;
+
+        // ROOT-CAUSE #1 (conflicting controller): the SAME boss object also has a BossMovement
+        // (BossBehavior.cs) component enabled. That old controller drives the boss with its own
+        // MovePosition chase AND its intro NREs on start (introStartPoint is unassigned). Two
+        // controllers fighting over one Rigidbody is undefined behaviour. Disable it so this
+        // controller is the single source of truth.
+        BossMovement legacy = GetComponent<BossMovement>();
+        if (legacy != null && legacy.enabled)
+        {
+            legacy.enabled = false;
+            if (debugLogs)
+                Debug.LogWarning("[Boss] Disabled conflicting legacy BossMovement on this object; " +
+                                 "BossFightController is now the only driver.", this);
+        }
+
+        if (debugLogs)
+            Debug.Log($"[Boss] Awake: isKinematic={rb.isKinematic} constraints={rb.constraints}", this);
     }
 
     void Start()
@@ -91,9 +111,15 @@ public class BossFightController : MonoBehaviour
         }
     }
 
+    private BossState loggedState = (BossState)(-1);
+
     void Update()
     {
-        Debug.Log("state: " + state);
+        if (debugLogs && state != loggedState)
+        {
+            Debug.Log($"[Boss] state -> {state} (isKinematic={rb.isKinematic})", this);
+            loggedState = state;
+        }
         PrintCurrentAnimationState();
         if (state == BossState.Dead || busy || player == null)
             return;
@@ -132,11 +158,23 @@ public class BossFightController : MonoBehaviour
 
         direction.Normalize();
 
+        Vector3 before = rb.position;
         rb.MovePosition(rb.position + direction * chaseSpeed * Time.fixedDeltaTime);
 
         animator.SetFloat(SpeedHash, chaseSpeed);
 
         FacePlayer();
+
+        // Chase diagnostics (throttled). If the boss is still pushing the player through a wall, these
+        // logs pin it down: isKinematic should now be False; if it is True here, root cause #2 regressed.
+        // "moved" shows whether physics is actually letting the boss advance (blocked vs steamrolling).
+        if (debugLogs && Time.frameCount % 20 == 0)
+        {
+            float dist = Vector3.Distance(transform.position, player.position);
+            float moved = (rb.position - before).magnitude;
+            Debug.Log($"[Boss] Chase: isKinematic={rb.isKinematic} distToPlayer={dist:F2} " +
+                      $"stepMoved={moved:F4} bossPos={transform.position} playerPos={player.position}", this);
+        }
     }
 
     IEnumerator IntroSequence()
@@ -182,6 +220,15 @@ public class BossFightController : MonoBehaviour
         yield return new WaitForSeconds(idleAfterTurn);
 
         SetPlayerLocked(false);
+
+        // ROOT-CAUSE #2 (through-wall push): the intro set rb.isKinematic = true for the scripted jump
+        // and NEVER set it back. A kinematic body has effectively infinite mass, so when the boss chases
+        // via MovePosition into a player pinned against a wall it just keeps advancing and shoves the
+        // player straight through the wall (issue #14). Returning to non-kinematic means the wall (through
+        // the player) can now resist the boss, so it stops instead of steamrolling the player off the map.
+        rb.isKinematic = false;
+        if (debugLogs)
+            Debug.Log($"[Boss] Intro done -> Chase. Set isKinematic=false so walls can block the push.", this);
 
         state = BossState.Chase;
         busy = false;
