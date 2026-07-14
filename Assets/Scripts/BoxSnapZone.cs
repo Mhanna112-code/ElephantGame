@@ -53,7 +53,7 @@ public class BoxSnapZone : MonoBehaviour
         if (!collision.collider.CompareTag("SnapZone"))
             return;
         Debug.Log("collided by SNAPZONE BOX");
-        if (rb.linearVelocity.magnitude <= velocityThreshold)
+        if (rb.linearVelocity.magnitude == 0)
         {
             Debug.Log("ACTIVATING");
             Activate();
