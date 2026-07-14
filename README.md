@@ -1,5 +1,9 @@
 # TRUNK!
 
+**▶ PLAY NOW: https://immortaldemongod.github.io/trunkgame/**
+
+![BIG GRUMP boss fight](media/boss-fight.png)
+
 A ground-up TypeScript rebuild of Team Ratateam's game-jam project *ElephantGame*
 (Unity). Not a port — a redesign built from the original's ideas ("the spirit"),
 with its failure modes designed out. See `DESIGN.md` for the full redesign
@@ -7,9 +11,11 @@ rationale and the fun audit.
 
 ## How to run
 
-**Zero-tools way:** download/open `dist/index.html` in any browser. It's one
-self-contained ~52KB file — no install, no server, works offline. (From GitHub:
-open the file on this branch → Raw → save → double-click.)
+**In your browser (nothing to install):**
+https://immortaldemongod.github.io/trunkgame/
+
+**Offline:** download `dist/index.html` and double-click it — one self-contained
+~52KB file, no dependencies, no server.
 
 **Dev way** (only needed to modify the game):
 ```bash
@@ -60,3 +66,7 @@ boss who dodges shots aimed at his face (bank shots off the mirrors).
 
 `?x=100&y=10` teleport spawn · `?checkpoint=3` spawn at checkpoint ·
 `?demo=launch|boss|win` canned action states for screenshots.
+
+## The whole journey
+
+![All nine beats](media/gallery.png)
