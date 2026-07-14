@@ -44,6 +44,12 @@ public class BossFightController : MonoBehaviour
     public float attackWindup = 0.35f;
     public int attackDamage = 1;
 
+    [Header("Contact Damage (issue #17)")]
+    [Tooltip("Damage dealt when the player simply collides with the boss (not just the timed punch).")]
+    public float contactDamage = 1f;
+    public float contactDamageCooldown = 1f;
+    private float nextContactDamageTime;
+
     [Header("Player Lock")]
     public Behaviour[] playerScriptsToDisable;
 
@@ -277,10 +283,17 @@ public class BossFightController : MonoBehaviour
 
         if (player != null && Vector3.Distance(transform.position, player.position) <= attackRange)
         {
-            Health health = player.GetComponent<Health>();
+            Health health = FindPlayerHealth();
             if (health != null)
             {
+                Debug.Log($"[Boss] punch connects -> {attackDamage} dmg to '{health.name}' " +
+                          $"(health {health.currentHealth} -> {Mathf.Max(0f, health.currentHealth - attackDamage)})", this);
                 health.TakeDamage(attackDamage);
+            }
+            else
+            {
+                Debug.LogWarning("[Boss] punch connected but the player has NO Health component -> no damage. " +
+                                 "Add a Health component to the player (issue #17 root cause).", this);
             }
         }
 
@@ -304,6 +317,50 @@ public class BossFightController : MonoBehaviour
 
         animator.SetFloat(SpeedHash, 0f);
         animator.SetTrigger(DieHash);
+    }
+
+    // ROOT CAUSE (issue #17): the punch used player.GetComponent<Health>(), which only looks on the player
+    // root. This finds nothing (in the current scene there is no Health component on the player at all), so
+    // the player never takes damage. Search self + children + parent so a Health placed anywhere on the
+    // player rig is found. If it returns null, the scene is missing a Health component (see the warning).
+    Health FindPlayerHealth()
+    {
+        if (player == null)
+            return null;
+
+        Health h = player.GetComponent<Health>();
+        if (h == null) h = player.GetComponentInChildren<Health>();
+        if (h == null) h = player.GetComponentInParent<Health>();
+        return h;
+    }
+
+    // The issue asks for damage from "colliding into" the boss, not only the timed punch. Damage the player
+    // on contact, throttled by contactDamageCooldown so a continuous touch does not drain health every frame.
+    void OnCollisionStay(Collision collision)
+    {
+        if (state == BossState.Dead)
+            return;
+
+        if (Time.time < nextContactDamageTime)
+            return;
+
+        // only the player takes contact damage
+        if (collision.collider.GetComponentInParent<PlayerController>() == null)
+            return;
+
+        Health health = collision.collider.GetComponentInParent<Health>();
+        if (health == null)
+        {
+            Debug.LogWarning("[Boss] player touched the boss but has NO Health component -> no contact damage. " +
+                             "Add a Health component to the player (issue #17).", this);
+            nextContactDamageTime = Time.time + contactDamageCooldown;
+            return;
+        }
+
+        nextContactDamageTime = Time.time + contactDamageCooldown;
+        Debug.Log($"[Boss] contact -> {contactDamage} dmg to '{health.name}' " +
+                  $"(health {health.currentHealth} -> {Mathf.Max(0f, health.currentHealth - contactDamage)})", this);
+        health.TakeDamage(contactDamage);
     }
 
     void FacePlayer()
