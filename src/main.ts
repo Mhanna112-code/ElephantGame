@@ -28,7 +28,11 @@ window.addEventListener("keydown", (e) => {
   if (e.code === "KeyE") interactQueued = true;
   if (e.code === "Space") { spaceQueued = true; audio.resume(); e.preventDefault(); }
   if (e.code === "KeyP") state.paused = !state.paused;
-  if (e.code === "KeyR" && (state.won || state.player.dead || e.shiftKey)) state = makeLevel();
+  if (e.code === "KeyR" && (state.won || state.player.dead || e.shiftKey)) {
+    state = makeLevel();
+    window.__state = state;
+    prev = { shots: 0, bounces: 0, launches: 0, deaths: 0, hp: 100, bossHp: state.boss.maxHp, won: false, toast: "", hearts: 0, leverOn: false, cp: "" };
+  }
 });
 window.addEventListener("keyup", (e) => keys.delete(e.code));
 canvas.addEventListener("mousemove", (e) => {
@@ -99,7 +103,7 @@ class Sfx {
 const audio = new Sfx();
 
 // audio triggers by diffing state
-let prev = { shots: 0, bounces: 0, launches: 0, deaths: 0, hp: 100, bossHp: 100, won: false, toast: "", hearts: 0, leverOn: false, cp: "" };
+let prev = { shots: 0, bounces: 0, launches: 0, deaths: 0, hp: 100, bossHp: 160, won: false, toast: "", hearts: 0, leverOn: false, cp: "" };
 function audioTick(s: State) {
   if (s.stats.shots > prev.shots) audio.shoot();
   if (s.stats.bounces > prev.bounces) audio.bounce();
@@ -115,7 +119,7 @@ function audioTick(s: State) {
   const cp = `${s.checkpoint.x},${s.checkpoint.y}`;
   if (cp !== prev.cp && prev.cp !== "") audio.checkpoint();
   if (s.toast.text === "out of puff! land to reload" && s.toast.timer > 0.99) audio.dry();
-  if (s.toast.text === "a spring appears!" && s.toast.timer > 1.55) audio.spring();
+  if (s.toast.text === "a spring appears!" && s.toast.text !== prev.toast) audio.spring();
   prev = { shots: s.stats.shots, bounces: s.stats.bounces, launches: s.stats.launches, deaths: s.stats.deaths, hp: s.player.hp, bossHp: s.boss.hp, won: s.won, toast: s.toast.text, hearts, leverOn: lv, cp };
 }
 
@@ -152,11 +156,7 @@ function frame(now: number) {
     ctx.font = "14px monospace";
     String(e && (e as Error).stack || e).split("\n").slice(0, 8).forEach((line, i) => ctx.fillText(line.slice(0, 110), 12, 30 + i * 20));
   }
-  // paint immediately so headless screenshots never race the rAF loop
-for (let i = 0; i < 60; i++) step(state, IDLE_INPUT, DT); // settle spawn
-render(ctx, state, { x: state.player.x + 3, y: state.player.y + 1 });
-
-requestAnimationFrame(frame);
+  requestAnimationFrame(frame);
 }
 
 function paintOnce(mouseWorld: { x: number; y: number }) {

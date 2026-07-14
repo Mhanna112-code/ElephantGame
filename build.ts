@@ -31,7 +31,7 @@ const html = `<meta charset="utf-8">
   <span class="chip"><b>E</b> carts · rings · levers</span>
   <span class="chip"><b>3</b> shots per flight — land or bounce off <b>green</b> to reload</span>
   <span class="chip"><b>P</b> pause</span>
-  <span class="chip"><b>R</b> retry</span>
+  <span class="chip"><b>R</b> retry when down · <b>shift+R</b> restart</span>
 </div>
 <p class="lore">Ride the cart. Climb the towers. Solve the box room. Surf the wind shaft. <em>Bank shots behind the boss — he reads the ones aimed at his face.</em></p>
 <script>${js.replace(/<\/script>/g, "<\\/script>")}</script>

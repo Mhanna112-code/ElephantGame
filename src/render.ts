@@ -222,6 +222,7 @@ export function render(ctx: CanvasRenderingContext2D, s: State, mouse: { x: numb
     if (a.x < -200 || a.x > VIEW_W + 200) continue;
     ctx.fillStyle = "#8a6a3a";
     ctx.fillRect(a.x - 2, a.y, 4, 0.8 * sc);
+    ctx.font = "600 13px system-ui, sans-serif";
     ctx.fillStyle = "rgba(30,20,40,0.55)";
     const w = ctx.measureText(sign.text).width + 20;
     roundRect(ctx, a.x - w / 2, a.y - 26, w, 24, 6);

@@ -51,7 +51,7 @@ look-ahead.
 9. **Wind shaft** — upward force zone between two walls; steer while floating,
    red/green platforms block/allow the climb.
 10. **Boss** — intro jump cutscene, then chase. Punch when close (windup +
-    cooldown), leap attack periodically, contact damage with cooldown. 100 HP,
+    cooldown), leap attack periodically, contact damage with cooldown. 160 HP,
     takes bullet hits, sidesteps ~40% of incoming bullets (the DodgeBullets
     spirit). Death = win screen.
 11. **Health/checkpoints** — 100 HP, damage flash, deathzones below level,

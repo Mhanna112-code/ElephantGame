@@ -183,8 +183,8 @@ test("wind shaft (pulsed) + recoil chains carry player to the arena", () => {
 
 test("boss: intro triggers, readable dodge fires on frontal shots, bank shots land, boss killable", () => {
   const s = makeLevel();
-  teleport(s, 158, 46.5);
-  sim(s, { right: true }, 1);
+  teleport(s, 168, 46.5);
+  sim(s, { right: true }, 1.5);
   expect(["intro", "chase"]).toContain(s.boss.phase);
   sim(s, { left: true }, 2.5); // retreat so he stays in chase range
   expect(["chase", "leap", "windup"]).toContain(s.boss.phase);
@@ -196,9 +196,10 @@ test("boss: intro triggers, readable dodge fires on frontal shots, bank shots la
   expect(sawTelegraph).toBe(true);
   // now grind him down (dodge has cooldown, so straight shots eventually land too)
   let guard = 0;
-  while (s.boss.hp > 0 && guard++ < 400) {
+  while (s.boss.hp > 0 && guard++ < 600) {
     const p = s.player;
     if (p.hp < 40) p.hp = 100; // bot isn't testing survival here
+    if (p.y < 44) { sim(s, { left: p.x > 169, right: p.x < 168 }, 0.3); continue; } // ride the wind back through the hole
     if (p.grounded) shot(s, s.boss.x, s.boss.y + 0.5);
     sim(s, { left: p.x > s.boss.x + 4, right: p.x < s.boss.x - 4 }, 0.3);
   }
@@ -348,9 +349,10 @@ test("FULL RUN: waypoint bot completes the game from spawn to boss kill", () => 
 
   // arena: kill the boss
   let guard = 0;
-  while (!s.won && guard++ < 500) {
+  while (!s.won && guard++ < 700) {
     const p = s.player;
     if (p.hp < 40) p.hp = 100;
+    if (p.y < 44) { sim(s, { left: p.x > 169, right: p.x < 168 }, 0.3); continue; } // wind recovery via the hole
     if (p.grounded) shot(s, s.boss.x, s.boss.y + 0.5);
     sim(s, { left: p.x > s.boss.x + 4, right: p.x < s.boss.x - 4 }, 0.3);
   }

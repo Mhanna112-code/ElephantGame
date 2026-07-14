@@ -220,7 +220,7 @@ export function makeLevel(): State {
   // 7 BOSS ARENA y 44 top, x 152..184
   P.push({ x: 152, y: 44, w: 14, h: 1.5, deco: "cloud" }); // arena floor (left of shaft exit)
   P.push({ x: 171, y: 44, w: 15, h: 1.5, deco: "cloud" }); // arena floor (right of shaft exit)
-  P.push({ x: 166, y: 44, w: 5, h: 0.4, oneWay: true, deco: "cloud" }); // shaft exit: pass from below, walk on top
+  P.push({ x: 166, y: 45.1, w: 5, h: 0.4, oneWay: true, deco: "cloud" }); // shaft exit: flush with the arena floors
   wall(151, 44, 10);  // arena left wall
   wall(185, 44, 10);  // arena right wall
 
@@ -298,7 +298,7 @@ export function makeLevel(): State {
     { x: 57.5, y: 4.2, text: "press E — ride the cart" },
     { x: 92, y: 1.6, text: "shots BOUNCE off green" },
     { x: 96.5, y: 1.6, text: "chain shots mid-air to climb higher!" },
-    { x: 93.8, y: 3.2, text: "hold E by a ring — hang & swing" },
+    { x: 93.8, y: 3.2, text: "hold E by a ring — swing (grabs reload!)" },
     { x: 139.7, y: 4.6, text: "box → plate → lever → door" },
     { x: 161.7, y: 4.5, text: "the wind carries you — steer!" },
   ];
@@ -309,7 +309,7 @@ export function makeLevel(): State {
     { x: 92, y: 1.5 },     // tower field
     { x: 139.5, y: 1.5 },  // puzzle room
     { x: 161.7, y: 1.5 },  // wind shaft floor
-    { x: 155, y: 46.5 },   // boss arena edge
+    { x: 168.5, y: 46.2 },  // boss arena: on the shaft exit platform
   ];
 
   const dodgers: Dodger[] = [
@@ -332,7 +332,7 @@ export function makeLevel(): State {
 
   const hearts: Heart[] = [
     { x: 144.1, y: 6.4, taken: false },  // spring shelf reward
-    { x: 154, y: 46.6, taken: false },   // before boss
+    { x: 166.8, y: 47, taken: false },   // at the shaft exit, before the boss
     { x: 92.5, y: 1.2, taken: false },   // after cart
     { x: 72, y: 4.2, taken: false },     // over the rail — shoot nothing, just lean and grab
     { x: 172.6, y: 27.5, taken: false }, // wind shaft, safe side opposite the ball
@@ -355,7 +355,7 @@ export function makeLevel(): State {
     cart, boss, signs, dodgers, rings, springs, hearts, tether: null,
     zoom: 1, zoomTarget: 1, paused: false, checkpoints, checkpoint: { x: 2.5, y: 1.5 },
     deathY: -14, camX: player.x, camY: player.y + 1.5, shake: 0, hitStop: 0,
-    rngState: 1337, won: false, wonTimer: 0, bossArenaX: 156,
+    rngState: 1337, won: false, wonTimer: 0, bossArenaX: 172,
     stats: { shots: 0, bounces: 0, launches: 0, deaths: 0, damageTaken: 0 },
     toast: { text: "", timer: 0 },
   };
@@ -481,6 +481,7 @@ function killPlayer(s: State) {
 function respawn(s: State) {
   const p = s.player;
   p.dead = false; p.hp = p.maxHp;
+  s.tether = null;
   p.x = s.checkpoint.x; p.y = s.checkpoint.y;
   p.vx = 0; p.vy = 0; p.iframes = 1.5; p.inCart = false;
   s.cart.riding = false;
@@ -628,6 +629,7 @@ export function step(s: State, input: Input, dt: number): void {
 
     const body = playerRect(p);
     const vel = { x: p.vx, y: p.vy };
+    const fallVy = p.vy;
     const wasGrounded = p.grounded;
     const res = moveBody(s, body, vel, dt);
     p.x = body.x + p.w / 2; p.y = body.y + p.h / 2;
@@ -640,8 +642,7 @@ export function step(s: State, input: Input, dt: number): void {
       p.x += mvx * dt;
     }
     if (p.grounded) p.coyote = 0.1; else p.coyote = Math.max(0, p.coyote - dt);
-    if (!wasGrounded && p.grounded && velDown(p)) p.landedImpact = Math.min(1, Math.abs(p.vy) / 15);
-    if (!wasGrounded && p.grounded) p.landedImpact = 0.5;
+    if (!wasGrounded && p.grounded) p.landedImpact = Math.max(0.35, Math.min(1, Math.abs(fallVy) / 15));
 
     // facing = velocity, with input fallback
     if (Math.abs(p.vx) > 0.3) p.face = p.vx > 0 ? 1 : -1;
@@ -929,8 +930,6 @@ export function step(s: State, input: Input, dt: number): void {
   updateCamera(s, dt);
 }
 
-function velDown(p: Player): boolean { return p.vy < -8; }
-
 function toggleLever(s: State, lv: Lever) {
   lv.on = !lv.on;
   for (const id of lv.targets) {
@@ -957,19 +956,23 @@ function updateBoss(s: State, input: Input, dt: number) {
         s.shake = 0.4;
       }
       return;
-    case "intro":
+    case "intro": {
       boss.timer += dt;
-      boss.vy -= 24 * dt;
-      boss.x += boss.vx * dt; boss.y += boss.vy * dt;
-      if (boss.y <= 45.4 + boss.h / 2 && boss.vy < 0) {
-        boss.y = 45.4 + boss.h / 2; boss.vy = 0; boss.vx = 0;
-        s.shake = 0.8;
-        s.zoomTarget = 1;
-        spawnParticles(s, boss.x, boss.y - 1, 16, "puff", 20);
-        if (boss.timer > 1.2) { boss.phase = "chase"; boss.timer = 0; }
+      const airborne = boss.y > 45.4 + boss.h / 2 + 0.001 || boss.vy > 0;
+      if (airborne) {
+        boss.vy -= 24 * dt;
+        boss.x += boss.vx * dt; boss.y += boss.vy * dt;
+        if (boss.y <= 45.4 + boss.h / 2 && boss.vy < 0) {
+          // single landing moment
+          boss.y = 45.4 + boss.h / 2; boss.vy = 0; boss.vx = 0;
+          s.shake = 0.8;
+          s.zoomTarget = 1;
+          spawnParticles(s, boss.x, boss.y - 1, 16, "puff", 20);
+        }
       }
       if (boss.timer > 2) { boss.phase = "chase"; boss.timer = 0; }
       return;
+    }
     case "chase": {
       boss.faceDir = p.x < boss.x ? -1 : 1;
       // READABLE DODGE: only bullets entering his facing arc trigger it, after a
