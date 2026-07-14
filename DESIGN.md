@@ -73,7 +73,11 @@ look-ahead.
     (your own mechanic, hostile: can't operate machinery, can't hurt him).
 19. **Peanut collectibles** — 12 on optional routes; perfect-win ending at 12/12.
 20. **Title card** — click-to-start front door doubles as the audio unlock; M
-    toggles a procedural chiptune loop.
+    toggles a procedural chiptune loop. Attract-mode demo plays behind it.
+21. **Speedrun timer** — HUD clock, localStorage best time, NEW BEST celebration.
+22. **GRUMP MODE** — unlockable second loop (G on title after any win): boss
+    220hp/faster/angrier, player capped at 70hp. The challenge curve's answer
+    to a player who has mastered the first clear.
 
 ## Level beats (left-to-right this time, ~8 screens)
 

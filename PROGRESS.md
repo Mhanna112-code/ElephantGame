@@ -33,6 +33,10 @@ localStorage best → flora from original props → boss named BIG GRUMP, credit
   "file:///Users/tomriddle1/trunkgame/dist/index.html?x=N&y=N"` (or ?demo=boss|win|launch)
 - Gallery montage builder in scratchpad/shots (ffmpeg xstack).
 
+## Late additions (after the handoff was first written)
+speedrun timer + best, flora, BIG GRUMP naming, birds, death tumble,
+attract mode + fresh-start-on-click, GRUMP MODE (21/21 tests).
+
 ## Idea queue if time remains before 8 AM
 - Re-verify + final gallery + closing report (MUST DO ~7:40).
 - Maybe: attract-mode bot on title screen; GIF capture; birds in sky; more
