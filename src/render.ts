@@ -141,6 +141,25 @@ export function render(ctx: CanvasRenderingContext2D, s: State, mouse: { x: numb
     }
   }
 
+  // ---- wind zones: rising streaks while the updraft is ON ----
+  for (const w of s.winds) {
+    if (!w.active) continue;
+    ctx.strokeStyle = "rgba(190,225,255,0.6)";
+    ctx.lineWidth = 3;
+    for (let i = 0; i < 16; i++) {
+      const wx = w.x + ((i * 0.83) % 1) * w.w + (i % 3) * 0.4;
+      const cycle = 2.2;
+      const ph = ((s.t * (3.5 + (i % 4) * 0.9) + i * 1.7) % cycle) / cycle;
+      const wy = w.y + ph * w.h;
+      const a = worldToScreen(s, wx, wy);
+      const b = worldToScreen(s, wx, wy + 0.9 + (i % 3) * 0.4);
+      if (a.y < -40 || a.y > VIEW_H + 40) continue;
+      ctx.globalAlpha = 0.85 * Math.sin(ph * Math.PI);
+      ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  }
+
   // ---- rails + cart ----
   drawRail(ctx, s);
   drawCart(ctx, s);

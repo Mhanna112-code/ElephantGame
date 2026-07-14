@@ -334,6 +334,7 @@ export function makeLevel(): State {
     { x: 154, y: 46.6, taken: false },   // before boss
     { x: 92.5, y: 1.2, taken: false },   // after cart
     { x: 72, y: 4.2, taken: false },     // over the rail — shoot nothing, just lean and grab
+    { x: 172.6, y: 27.5, taken: false }, // wind shaft, safe side opposite the ball
   ];
   // heart shelf platform (reach via spring)
   P.push({ x: 142.6, y: 5.2, w: 3, h: 0.4, oneWay: true, deco: "metal" });
