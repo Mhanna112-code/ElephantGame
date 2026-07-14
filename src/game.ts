@@ -743,6 +743,20 @@ export function step(s: State, input: Input, dt: number): void {
       b.y += b.dy * b.speed * sub;
       const br: Rect = { x: b.x - 0.14, y: b.y - 0.14, w: 0.28, h: 0.28 };
 
+      // player bullets can shoot hostile peanuts down (both pop)
+      if (!b.hostile) {
+        for (const hb of s.bullets) {
+          if (hb.hostile && !hb.dead && Math.hypot(hb.x - b.x, hb.y - b.y) < 0.42) {
+            hb.dead = true; b.dead = true;
+            s.hitStop = Math.max(s.hitStop, 0.04);
+            s.shake = Math.max(s.shake, 0.15);
+            spawnParticles(s, (hb.x + b.x) / 2, (hb.y + b.y) / 2, 10, "confetti", 25);
+            s.toast = { text: "intercepted!", timer: 0.7 };
+            break;
+          }
+        }
+        if (b.dead) break;
+      }
       // hostile peanuts hurt the player instead
       if (b.hostile) {
         if (Math.hypot(b.x - p.x, b.y - (p.y + 0.2)) < 0.75) {

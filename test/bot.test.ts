@@ -376,3 +376,21 @@ test("boss phase 2: enraged boss spits hostile peanuts that hurt on contact", ()
   // hostile bullets never operate machinery or damage the boss
   expect(s.boss.hp).toBe(Math.floor(s.boss.maxHp * 0.3));
 });
+
+test("phase 2 counterplay: player bullets intercept hostile peanuts mid-air", () => {
+  const s = makeLevel();
+  teleport(s, 174, 46.5);
+  sim(s, {}, 3.5);
+  s.boss.hp = Math.floor(s.boss.maxHp * 0.3); // enrage
+  let intercepted = false;
+  for (let t = 0; t < 15 && !intercepted; t += 0.2) {
+    const hostile = s.bullets.find(b => b.hostile && Math.abs(b.y - s.player.y) < 3);
+    if (hostile) {
+      // lead the shot at the peanut's next position
+      shot(s, hostile.x + hostile.dx * 0.5, hostile.y + hostile.dy * 0.5);
+    }
+    sim(s, {}, 0.2);
+    if (s.toast.text === "intercepted!") intercepted = true;
+  }
+  expect(intercepted).toBe(true);
+});
