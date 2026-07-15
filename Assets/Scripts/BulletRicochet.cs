@@ -57,6 +57,7 @@ public class BulletRicochet : MonoBehaviour
         BeehiveTarget hive = collision.collider.GetComponentInParent<BeehiveTarget>();
         if (hive != null)
         {
+            Debug.Log($"[Hive] bullet struck '{collision.collider.name}' -> routed to '{hive.name}'", hive);
             hive.Hit();
             Destroy(gameObject);
             return;

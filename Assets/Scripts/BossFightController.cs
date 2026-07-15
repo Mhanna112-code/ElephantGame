@@ -108,6 +108,7 @@ public class BossFightController : MonoBehaviour
 
     private BossState state = BossState.Waiting;
     private float nextAttackTime;
+    private bool wasSupportedLastStep = true;
     private float nextJumpTime;
     private bool busy;
 
@@ -207,10 +208,19 @@ public class BossFightController : MonoBehaviour
         // Kinematic body: no gravity. Snap to the floor when there is one under
         // him; sink at unsupportedFallSpeed when there is not, instead of
         // striding on air at whatever height the last move left him.
-        if (TryGetGroundHeight(newPos, out float groundY))
+        bool supported = TryGetGroundHeight(newPos, out float groundY);
+        if (supported)
             newPos.y = groundY;
         else
             newPos.y -= unsupportedFallSpeed * Time.fixedDeltaTime;
+
+        if (supported != wasSupportedLastStep)
+        {
+            Debug.Log(supported
+                ? $"[BossGround] regained floor at y={groundY:F2} (x={newPos.x:F1})"
+                : $"[BossGround] NO floor under boss at (x={newPos.x:F1}) - sinking (check floorMask/maxStepUp if this is wrong)", this);
+            wasSupportedLastStep = supported;
+        }
 
         rb.MovePosition(newPos);
 
@@ -447,6 +457,7 @@ public class BossFightController : MonoBehaviour
         // airborne above us, raise the arc so its peak clears their height.
         float requiredPeak = (player.position.y - start.y) + 1.5f;
         float arcHeight = Mathf.Max(jumpAttackHeight, requiredPeak);
+        Debug.Log($"[BossJump] playerY={player.position.y:F1} bossY={start.y:F1} arcHeight={arcHeight:F1} (base {jumpAttackHeight}) landing={landingPosition}", this);
 
         bool struckMidAir = false;
 
@@ -472,6 +483,7 @@ public class BossFightController : MonoBehaviour
                 {
                     airHealth.TakeDamage(jumpAttackDamage);
                     struckMidAir = true;
+                    Debug.Log($"[BossJump] mid-air strike at t={t:F2} bossY={transform.position.y:F1}", this);
                 }
             }
 
@@ -531,6 +543,9 @@ public class BossFightController : MonoBehaviour
 
         float timer = 0f;
 
+        Debug.Log($"[BossSlide] start dir={direction} bossX={rb.position.x:F1} playerX={player.position.x:F1}", this);
+        string endReason = "timeout";
+
         // The jump attack lands the boss ON the player's x, so a plain
         // "crossed past the player" check was true on the very first frame and
         // the slide ended instantly (issue #43). Require sliding a real
@@ -549,25 +564,36 @@ public class BossFightController : MonoBehaviour
             rb.MovePosition(nextPos);
 
             if (hitWall)
+            {
+                endReason = "wall";
                 break;
+            }
 
             if (player == null)
+            {
+                endReason = "playerLost";
                 break;
+            }
 
             // Stop only once we are well past the player in the slide direction.
             float past = (nextPos.x - player.position.x) * direction;
             if (past >= slideOvershoot)
+            {
+                endReason = "overshootPastPlayer";
                 break;
+            }
 
             yield return null;
         }
 
+        Debug.Log($"[BossSlide] end reason={endReason} t={timer:F2}s bossX={rb.position.x:F1}", this);
         animator.SetFloat(SpeedHash, 0f);
     }
 
     public void RegisterSpikeHit()
     {
         spikeHitCount++;
+        Debug.Log($"[Spike] boss spike hits: {spikeHitCount}/2 (phase3 at 2)", this);
 
         if (spikeHitCount >= 2 && !phase3Active)
         {

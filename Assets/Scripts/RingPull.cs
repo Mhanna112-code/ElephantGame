@@ -180,23 +180,30 @@ public class RingPull : MonoBehaviour
             return;
 
         Transform boss = bossHealth.transform;
+        bool struck = false;
 
         foreach (SkinnedMeshRenderer spike in new[] { spike1, spike2 })
         {
             if (spike == null)
                 continue;
 
-            if (Vector3.Distance(boss.position, spike.bounds.center) <= spikeDamageRadius)
+            float d = Vector3.Distance(boss.position, spike.bounds.center);
+            if (d <= spikeDamageRadius)
             {
+                Debug.Log($"[Spike] STRIKE: boss at {d:F1} of '{spike.name}' (radius {spikeDamageRadius}) -> {spikeDamage} dmg", this);
                 bossHealth.TakeDamage(spikeDamage);
 
                 BossFightController controller = boss.GetComponent<BossFightController>();
                 if (controller != null)
                     controller.RegisterSpikeHit();
 
+                struck = true;
                 break;
             }
         }
+
+        if (!struck)
+            Debug.Log($"[Spike] full pull but boss out of range of both spikes (radius {spikeDamageRadius}) - no damage", this);
     }
 
 

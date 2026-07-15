@@ -40,12 +40,15 @@ public class BeehiveTarget : MonoBehaviour
 
         currentHits++;
 
+        Debug.Log($"[Hive] '{name}' hit {currentHits}/{hitsRequired}", this);
+
         StartCoroutine(Shake());
 
 
         if (currentHits >= hitsRequired)
         {
             activated = true;
+            Debug.Log($"[Hive] '{name}' releasing honey (prefab={(honeyPrefab != null)}, spawnPoint={(honeySpawnPoint != null)})", this);
             StartCoroutine(ReleaseHoney());
             SpawnBeeSwarm();
         }
@@ -68,6 +71,8 @@ public class BeehiveTarget : MonoBehaviour
     // is kept only as a guard against double-counting removal regressions.
     void OnCollisionEnter(Collision collision)
     {
+        if (collision.collider.CompareTag("Bullet"))
+            Debug.Log($"[Hive] '{name}' hive-side collision also saw the bullet (info only, not counted)", this);
         if (false && collision.collider.CompareTag("Bullet"))
         {
             Hit();

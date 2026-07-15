@@ -32,7 +32,10 @@ public class HoneyDrop : MonoBehaviour
 
         // Never land on the beehive we just fell out of (or any other hive).
         if (other.GetComponentInParent<BeehiveTarget>() != null)
+        {
+            Debug.Log($"[Honey] ignoring contact with hive collider '{other.name}' while falling", this);
             return;
+        }
 
         // Only land on surfaces BELOW the glob's centre — brushing the side of
         // a wall or a prop while falling should not freeze the drop mid-air.
@@ -45,6 +48,7 @@ public class HoneyDrop : MonoBehaviour
         if (isStaticGeometry || other.CompareTag("Floor"))
         {
             landed = true;
+            Debug.Log($"[Honey] landed on '{other.name}' at y={transform.position.y:F2}", this);
 
             Rigidbody rb = GetComponent<Rigidbody>();
 

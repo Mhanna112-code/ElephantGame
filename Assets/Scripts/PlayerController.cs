@@ -46,6 +46,7 @@ public class PlayerController : MonoBehaviour
         // knockbacks sweep instead of teleporting.
         rb.maxDepenetrationVelocity = 6f;
         rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
+        Debug.Log("[Player] anti-tunnel active: maxDepenetrationVelocity=6, CCD=Continuous", this);
 
         Collider bulletCol = GetComponent<Collider>();
         GameObject player = GameObject.FindGameObjectWithTag("Player");
