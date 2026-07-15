@@ -9,35 +9,41 @@ public class BossStuckInHoney : MonoBehaviour
     [Header("References")]
     public Rigidbody bossRb;
 
-    private bool inHoney = false;
+    // counted (not a bool) so overlapping honey pools behave when leaving one
+    private int honeyContacts = 0;
+
+    private bool InHoney => honeyContacts > 0;
 
 
+    // Honey is detected by its HoneyDrop component instead of a "Honey" tag —
+    // that tag was never defined in the TagManager, so the old check could not
+    // match anything (part of issue #41).
     void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Honey"))
+        if (other.GetComponentInParent<HoneyDrop>() != null)
         {
-            inHoney = true;
+            honeyContacts++;
         }
     }
 
 
     void OnTriggerExit(Collider other)
     {
-        if (other.CompareTag("Honey"))
+        if (other.GetComponentInParent<HoneyDrop>() != null)
         {
-            inHoney = false;
+            honeyContacts = Mathf.Max(0, honeyContacts - 1);
         }
     }
 
 
     public float GetCurrentSpeed()
     {
-        return inHoney ? honeySpeed : normalSpeed;
+        return InHoney ? honeySpeed : normalSpeed;
     }
 
 
     public bool CanJump()
     {
-        return !inHoney;
+        return !InHoney;
     }
 }

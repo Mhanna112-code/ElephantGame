@@ -64,7 +64,9 @@ public class BossFightController : MonoBehaviour
         rb = GetComponent<Rigidbody>();
         animator = GetComponent<Animator>();
 
-        rb.constraints = RigidbodyConstraints.FreezeRotation;
+        // Freeze Z position too: the boss lives on the 2.5D gameplay plane. Part
+        // of issue #40 (hopping off-axis, landing misaligned with the floor).
+        rb.constraints = RigidbodyConstraints.FreezeRotation | RigidbodyConstraints.FreezePositionZ;
         rb.interpolation = RigidbodyInterpolation.Interpolate;
     }
 
@@ -126,15 +128,22 @@ public class BossFightController : MonoBehaviour
 
         Vector3 direction = player.position - transform.position;
         direction.y = 0f;
+        direction.z = 0f; // stay on the gameplay plane (issue #40)
 
         if (direction.sqrMagnitude < 0.0001f)
             return;
 
         direction.Normalize();
 
-        rb.MovePosition(rb.position + direction * chaseSpeed * Time.fixedDeltaTime);
+        // honey slows the boss down (issue #41 / beehive fight design)
+        float speed = chaseSpeed;
+        BossStuckInHoney honey = GetComponent<BossStuckInHoney>();
+        if (honey != null)
+            speed = Mathf.Min(chaseSpeed, honey.GetCurrentSpeed());
 
-        animator.SetFloat(SpeedHash, chaseSpeed);
+        rb.MovePosition(rb.position + direction * speed * Time.fixedDeltaTime);
+
+        animator.SetFloat(SpeedHash, speed);
 
         FacePlayer();
     }

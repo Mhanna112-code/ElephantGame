@@ -19,9 +19,21 @@ public class HoneyDrop : MonoBehaviour
     }
 
 
-    void OnCollisionEnter(Collision collision)
+    // The honey's collider is (correctly) a trigger so the boss can stand inside
+    // it for BossStuckInHoney. Triggers never fire OnCollisionEnter, which is why
+    // the glob fell straight through the room (issue #41). Landing is now trigger
+    // based, and works against any static geometry so the floor does not need a
+    // special tag. Requires a kinematic Rigidbody on this object so Unity
+    // generates trigger events at all (added on the Honey prefab).
+    void OnTriggerEnter(Collider other)
     {
-        if (collision.collider.CompareTag("Floor"))
+        if (landed || other.isTrigger)
+            return;
+
+        // static level geometry has no rigidbody; the boss and player do
+        bool isStaticGeometry = other.attachedRigidbody == null;
+
+        if (isStaticGeometry || other.CompareTag("Floor"))
         {
             landed = true;
 
