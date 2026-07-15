@@ -5,6 +5,20 @@ public class HoneyDrop : MonoBehaviour
     public float fallSpeed = 5f;
 
     private bool landed = false;
+    private float spawnY;
+    private float airtime;
+    private int contactLogs;
+    private bool watchdogFired;
+
+
+    void Start()
+    {
+        spawnY = transform.position.y;
+        Rigidbody rb = GetComponent<Rigidbody>();
+        Collider col = GetComponentInChildren<Collider>();
+        Debug.Log($"[Honey] spawned '{name}' at {transform.position} rb={(rb != null ? (rb.isKinematic ? "kinematic" : "dynamic") : "MISSING")} " +
+                  $"collider={(col != null ? col.GetType().Name : "MISSING")} trigger={(col != null && col.isTrigger)} layer={gameObject.layer}", this);
+    }
 
 
     void Update()
@@ -15,6 +29,18 @@ public class HoneyDrop : MonoBehaviour
                 Vector3.down *
                 fallSpeed *
                 Time.deltaTime;
+
+            airtime += Time.deltaTime;
+
+            // Falling far past the floor without a single trigger contact means
+            // no events are being generated at all — name the facts once.
+            if (!watchdogFired && (airtime > 3f || spawnY - transform.position.y > 15f))
+            {
+                watchdogFired = true;
+                Debug.LogWarning($"[Honey] '{name}' STILL FALLING after {airtime:F1}s (y {spawnY:F1} -> {transform.position.y:F1}) " +
+                                 $"with {contactLogs} trigger contacts seen. If contacts=0, no trigger events are generated: " +
+                                 $"check the instantiated glob has the kinematic Rigidbody (prefab reimport!) and the floor collider under it.", this);
+            }
         }
     }
 
@@ -27,6 +53,14 @@ public class HoneyDrop : MonoBehaviour
     // generates trigger events at all (added on the Honey prefab).
     void OnTriggerEnter(Collider other)
     {
+        // Name the first few contacts BEFORE any guard decides — silent guard
+        // rejections are undiagnosable from a log dump.
+        if (!landed && contactLogs < 5)
+        {
+            contactLogs++;
+            Debug.Log($"[Honey] '{name}' contact {contactLogs}: '{other.name}' trigger={other.isTrigger} rb={(other.attachedRigidbody != null)} layer={other.gameObject.layer}", this);
+        }
+
         if (landed || other.isTrigger)
             return;
 
