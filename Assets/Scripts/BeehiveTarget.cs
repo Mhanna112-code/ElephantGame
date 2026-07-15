@@ -63,9 +63,12 @@ public class BeehiveTarget : MonoBehaviour
         swarm.Init(beePrefab, beeCount, spawnPosition, player, trunkTip != null ? trunkTip : player);
     }
 
+    // Bullet hits are routed here by BulletRicochet (which reliably receives the
+    // collision even when it lands on a child collider). The old OnCollisionEnter
+    // is kept only as a guard against double-counting removal regressions.
     void OnCollisionEnter(Collision collision)
     {
-        if (collision.collider.CompareTag("Bullet"))
+        if (false && collision.collider.CompareTag("Bullet"))
         {
             Hit();
 

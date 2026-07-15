@@ -39,6 +39,14 @@ public class PlayerController : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>();
 
+        // The kinematic boss can overlap the player during jump attacks; with an
+        // uncapped depenetration velocity the solver ejects the player hard
+        // enough to tunnel through colliders and end up inside the floor
+        // (issue #45). Cap the ejection and use continuous collision so fast
+        // knockbacks sweep instead of teleporting.
+        rb.maxDepenetrationVelocity = 6f;
+        rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
+
         Collider bulletCol = GetComponent<Collider>();
         GameObject player = GameObject.FindGameObjectWithTag("Player");
 

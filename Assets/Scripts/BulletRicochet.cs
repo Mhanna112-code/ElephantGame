@@ -50,6 +50,18 @@ public class BulletRicochet : MonoBehaviour
             return;
         }
 
+        // Beehive: register the hit on the parent script even when the contact
+        // lands on a child collider (static hive = no rigidbody, so the hive's
+        // own OnCollisionEnter never sees child-collider hits), and consume the
+        // bullet instead of ricocheting off the hive.
+        BeehiveTarget hive = collision.collider.GetComponentInParent<BeehiveTarget>();
+        if (hive != null)
+        {
+            hive.Hit();
+            Destroy(gameObject);
+            return;
+        }
+
         BossHealth boss = collision.collider.GetComponent<BossHealth>();
 
         if (boss != null)

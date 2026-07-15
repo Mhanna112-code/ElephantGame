@@ -28,6 +28,15 @@ public class RingPull : MonoBehaviour
 
     private bool spikesDisabled;
 
+    [Header("Spike Damage")]
+    [Tooltip("Boss within this range of a spike when the ring is fully pulled takes damage and registers a spike hit (phase 3 counter).")]
+    public float spikeDamageRadius = 3f;
+    public int spikeDamage = 25;
+    [Tooltip("Minimum time between spike strikes from this ring.")]
+    public float spikeRefireDelay = 1.5f;
+    private float lastStrikeTime = -999f;
+    private float previousPullAmount;
+
     public void DisableSpikes()
     {
         spikesDisabled = true;
@@ -148,6 +157,46 @@ public class RingPull : MonoBehaviour
 
 
         UpdateSpikes(pullAmount);
+
+        // Full pull = spike strike. Damages the boss if he is standing at a
+        // spike (the whole point of luring him into the honey — he wasn't
+        // taking any damage before because nothing ever called into
+        // BossHealth/RegisterSpikeHit).
+        bool fullyPulled = pullAmount >= maxPullDistance * 0.9f;
+        bool wasFullyPulled = previousPullAmount >= maxPullDistance * 0.9f;
+        previousPullAmount = pullAmount;
+
+        if (fullyPulled && !wasFullyPulled && Time.time - lastStrikeTime >= spikeRefireDelay && !spikesDisabled)
+        {
+            lastStrikeTime = Time.time;
+            StrikeBoss();
+        }
+    }
+
+    void StrikeBoss()
+    {
+        BossHealth bossHealth = FindFirstObjectByType<BossHealth>();
+        if (bossHealth == null)
+            return;
+
+        Transform boss = bossHealth.transform;
+
+        foreach (SkinnedMeshRenderer spike in new[] { spike1, spike2 })
+        {
+            if (spike == null)
+                continue;
+
+            if (Vector3.Distance(boss.position, spike.bounds.center) <= spikeDamageRadius)
+            {
+                bossHealth.TakeDamage(spikeDamage);
+
+                BossFightController controller = boss.GetComponent<BossFightController>();
+                if (controller != null)
+                    controller.RegisterSpikeHit();
+
+                break;
+            }
+        }
     }
 
 

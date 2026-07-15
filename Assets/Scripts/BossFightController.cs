@@ -443,6 +443,13 @@ public class BossFightController : MonoBehaviour
         Vector3 landingPosition = SnapToGround(clampedLandingTarget);
         Vector3 start = transform.position;
 
+        // Jump as high as needed to reach the player (issue #44): if they are
+        // airborne above us, raise the arc so its peak clears their height.
+        float requiredPeak = (player.position.y - start.y) + 1.5f;
+        float arcHeight = Mathf.Max(jumpAttackHeight, requiredPeak);
+
+        bool struckMidAir = false;
+
         float timer = 0f;
 
         while (timer < jumpAttackDuration)
@@ -451,10 +458,23 @@ public class BossFightController : MonoBehaviour
             float t = Mathf.Clamp01(timer / jumpAttackDuration);
 
             Vector3 position = Vector3.Lerp(start, landingPosition, t);
-            float bump = Mathf.Sin(t * Mathf.PI) * jumpAttackHeight;
+            float bump = Mathf.Sin(t * Mathf.PI) * arcHeight;
             position.y += Mathf.Min(bump, GetHeightClearance(position));
 
             rb.MovePosition(position);
+
+            // Contact damage while airborne — the point of jumping that high.
+            if (!struckMidAir && player != null &&
+                Vector3.Distance(transform.position, player.position) <= attackRange)
+            {
+                Health airHealth = player.GetComponent<Health>();
+                if (airHealth != null)
+                {
+                    airHealth.TakeDamage(jumpAttackDamage);
+                    struckMidAir = true;
+                }
+            }
+
             yield return null;
         }
 
@@ -463,7 +483,7 @@ public class BossFightController : MonoBehaviour
         animator.SetTrigger(LandHash);
         FacePlayer();
 
-        if (player != null && Vector3.Distance(transform.position, player.position) <= attackRange + 1f)
+        if (!struckMidAir && player != null && Vector3.Distance(transform.position, player.position) <= attackRange + 1f)
         {
             Health health = player.GetComponent<Health>();
             if (health != null)
@@ -511,13 +531,19 @@ public class BossFightController : MonoBehaviour
 
         float timer = 0f;
 
+        // The jump attack lands the boss ON the player's x, so a plain
+        // "crossed past the player" check was true on the very first frame and
+        // the slide ended instantly (issue #43). Require sliding a real
+        // distance PAST the player before stopping.
+        const float slideOvershoot = 1.5f;
+
         while (timer < slideMaxDuration)
         {
             timer += Time.deltaTime;
 
             Vector3 intendedPos = rb.position + new Vector3(direction * slideSpeed * Time.deltaTime, 0f, 0f);
-            Vector3 nextPos = intendedPos;
-            bool hitWall = Vector3.Distance(nextPos, rb.position) < Vector3.Distance(intendedPos, rb.position) * 0.5f;
+            Vector3 nextPos = ClampHorizontalMove(rb.position, intendedPos);
+            bool hitWall = Vector3.Distance(nextPos, intendedPos) > 0.001f;
 
             nextPos = SnapToGround(nextPos);
             rb.MovePosition(nextPos);
@@ -528,10 +554,9 @@ public class BossFightController : MonoBehaviour
             if (player == null)
                 break;
 
-            float sideNow = nextPos.x - player.position.x;
-
-            // Crossed once our side of the player flips relative to the direction we're sliding.
-            if (direction > 0f ? sideNow >= 0f : sideNow <= 0f)
+            // Stop only once we are well past the player in the slide direction.
+            float past = (nextPos.x - player.position.x) * direction;
+            if (past >= slideOvershoot)
                 break;
 
             yield return null;
