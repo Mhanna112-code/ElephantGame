@@ -96,6 +96,10 @@ public class BossFightController : MonoBehaviour
 
     [Tooltip("Layers actually walkable as floor. Must exclude ceilings/overhead geometry, or SnapToGround will treat their underside-facing-up top surface as ground and put the boss on top of it.")]
     public LayerMask floorMask = ~0;
+    [Tooltip("A ground hit more than this far ABOVE the boss's current height is ignored — stops SnapToGround from teleporting him onto overhead props (beehive, rims) whose tops the ray crosses. Issue: boss running around in mid-air.")]
+    public float maxStepUp = 1.2f;
+    [Tooltip("Kinematic pseudo-gravity: how fast the boss sinks when SnapToGround finds no floor under him (walking off an edge used to leave him striding on air forever).")]
+    public float unsupportedFallSpeed = 12f;
 
     private Rigidbody rb;
     private Animator animator;
@@ -199,7 +203,14 @@ public class BossFightController : MonoBehaviour
 
         Vector3 newPos = rb.position + direction * speed * Time.fixedDeltaTime;
         newPos = ClampHorizontalMove(rb.position, newPos);
-        newPos = SnapToGround(newPos);
+
+        // Kinematic body: no gravity. Snap to the floor when there is one under
+        // him; sink at unsupportedFallSpeed when there is not, instead of
+        // striding on air at whatever height the last move left him.
+        if (TryGetGroundHeight(newPos, out float groundY))
+            newPos.y = groundY;
+        else
+            newPos.y -= unsupportedFallSpeed * Time.fixedDeltaTime;
 
         rb.MovePosition(newPos);
 
@@ -640,6 +651,15 @@ public class BossFightController : MonoBehaviour
 
 Vector3 SnapToGround(Vector3 position)
 {
+    if (TryGetGroundHeight(position, out float groundY))
+        position.y = groundY;
+    return position;
+}
+
+bool TryGetGroundHeight(Vector3 position, out float groundY)
+{
+    groundY = position.y;
+
     Vector3 rayStart = position + Vector3.up * groundRayStartHeight;
     float rayDistance = groundRayStartHeight + groundRayDistance;
 
@@ -652,7 +672,7 @@ Vector3 SnapToGround(Vector3 position)
     );
 
     if (hits.Length == 0)
-        return position;
+        return false;
 
     System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
 
@@ -662,12 +682,19 @@ Vector3 SnapToGround(Vector3 position)
         if (hit.collider.transform.IsChildOf(transform))
             continue;
 
-        position.y = hit.point.y + groundOffset;
-        return position;
+        // Skip surfaces well above the boss's current height (overhead props):
+        // walking under the beehive must not teleport him on top of it.
+        if (hit.point.y > position.y + maxStepUp)
+            continue;
+
+        groundY = hit.point.y + groundOffset;
+        return true;
     }
 
-    return position;
-}    float CalculateGroundOffset()
+    return false;
+}
+
+    float CalculateGroundOffset()
     {
         if (groundingCollider != null)
         {
