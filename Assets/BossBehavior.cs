@@ -218,9 +218,7 @@ public class BossMovement : MonoBehaviour
     }
 
 
-
-
-
+    public BossStuckInHoney bossStuckInHoney;
     void ChasePlayer()
     {
         Vector3 direction =
@@ -233,6 +231,8 @@ public class BossMovement : MonoBehaviour
 
         direction.Normalize();
 
+
+        moveSpeed = bossStuckInHoney.GetCurrentSpeed();
 
 
         rb.MovePosition(
