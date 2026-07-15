@@ -30,6 +30,15 @@ public class HoneyDrop : MonoBehaviour
         if (landed || other.isTrigger)
             return;
 
+        // Never land on the beehive we just fell out of (or any other hive).
+        if (other.GetComponentInParent<BeehiveTarget>() != null)
+            return;
+
+        // Only land on surfaces BELOW the glob's centre — brushing the side of
+        // a wall or a prop while falling should not freeze the drop mid-air.
+        if (other.bounds.max.y > transform.position.y)
+            return;
+
         // static level geometry has no rigidbody; the boss and player do
         bool isStaticGeometry = other.attachedRigidbody == null;
 
