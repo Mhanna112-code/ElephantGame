@@ -15,6 +15,12 @@ public class BeehiveTarget : MonoBehaviour
     public float shakeDuration = 0.5f;
     public float shakeAmount = 0.15f;
 
+    [Header("Bee Swarm")]
+    public GameObject beePrefab;
+    public int beeCount = 6;
+    public Transform player;
+    public Transform trunkTip;
+
     private int currentHits = 0;
     private bool activated = false;
 
@@ -41,7 +47,20 @@ public class BeehiveTarget : MonoBehaviour
         {
             activated = true;
             StartCoroutine(ReleaseHoney());
+            SpawnBeeSwarm();
         }
+    }
+
+    void SpawnBeeSwarm()
+    {
+        if (beePrefab == null || player == null)
+            return;
+
+        Vector3 spawnPosition = honeySpawnPoint != null ? honeySpawnPoint.position : transform.position;
+
+        GameObject swarmObject = new GameObject("BeeSwarm");
+        BeeSwarm swarm = swarmObject.AddComponent<BeeSwarm>();
+        swarm.Init(beePrefab, beeCount, spawnPosition, player, trunkTip != null ? trunkTip : player);
     }
 
     void OnCollisionEnter(Collision collision)
@@ -87,6 +106,18 @@ public class BeehiveTarget : MonoBehaviour
                 spawnPos,
                 Quaternion.identity
             );
+
+            // Otherwise the honey overlaps the hive's own collider at spawn
+            // and HoneyDrop registers a false landing before it ever falls.
+            Collider honeyCollider = honey.GetComponentInChildren<Collider>();
+
+            if (honeyCollider != null)
+            {
+                foreach (Collider hiveCollider in GetComponentsInChildren<Collider>())
+                {
+                    Physics.IgnoreCollision(honeyCollider, hiveCollider, true);
+                }
+            }
 
 
             // small delay between drops

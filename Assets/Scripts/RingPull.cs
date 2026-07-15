@@ -26,19 +26,28 @@ public class RingPull : MonoBehaviour
     private float startRingY;
     private float playerStartY;
 
+    private bool spikesDisabled;
 
+    public void DisableSpikes()
+    {
+        spikesDisabled = true;
+    }
     void Start()
     {
-        Debug.Log("Blend Shapes: " + spike1.sharedMesh.blendShapeCount);
-
-        for (int i = 0; i < spike1.sharedMesh.blendShapeCount; i++)
+        if (spike1 != null)
         {
-            Debug.Log(
-                i + ": " + spike1.sharedMesh.GetBlendShapeName(i)
-            );
+            Debug.Log("Blend Shapes: " + spike1.sharedMesh.blendShapeCount);
+
+            for (int i = 0; i < spike1.sharedMesh.blendShapeCount; i++)
+            {
+                Debug.Log(
+                    i + ": " + spike1.sharedMesh.GetBlendShapeName(i)
+                );
+            }
+
+            spike1.SetBlendShapeWeight(0, 100f);
         }
 
-        spike1.SetBlendShapeWeight(0, 100f);
         if (ring == null)
             ring = transform;
 
@@ -48,9 +57,10 @@ public class RingPull : MonoBehaviour
         startRingY = ring.position.y;
     }
 
-
     void Update()
     {
+        if (spikesDisabled)
+            return;
         if (trunkTouching && Input.GetKeyDown(KeyCode.E))
         {
             if (!attached)

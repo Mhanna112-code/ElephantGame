@@ -32,6 +32,9 @@ public class PlayerController : MonoBehaviour
     private bool isClimbing;
     private bool isRidingMinecart;
 
+    private bool blockedPositiveX;
+    private bool blockedNegativeX;
+
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -121,12 +124,45 @@ public class PlayerController : MonoBehaviour
             z = Input.GetAxisRaw("Vertical");
         }
 
+        float moveX = x * moveSpeed;
+
+        // Don't keep re-driving into a wall we're already pressed against - that
+        // constant push is what was pinning the player in the air against it
+        // instead of letting gravity slide them down like a normal wall.
+        if ((moveX > 0f && blockedPositiveX) || (moveX < 0f && blockedNegativeX))
+            moveX = 0f;
+
         Vector3 vel = rb.linearVelocity;
 
-        vel.x = x * moveSpeed;
+        vel.x = moveX;
         vel.z = z * moveSpeed;
 
         rb.linearVelocity = vel;
+    }
+
+    void OnCollisionStay(Collision collision)
+    {
+        foreach (ContactPoint contact in collision.contacts)
+        {
+            Vector3 normal = contact.normal;
+
+            // Ignore floor/ceiling contacts - only steep/vertical surfaces count as walls.
+            if (Mathf.Abs(normal.y) > 0.5f)
+                continue;
+
+            // contact.normal points away from the surface, back toward the player,
+            // so a wall blocking rightward movement has a normal pointing left.
+            if (normal.x < 0f)
+                blockedPositiveX = true;
+            else if (normal.x > 0f)
+                blockedNegativeX = true;
+        }
+    }
+
+    void OnCollisionExit(Collision collision)
+    {
+        blockedPositiveX = false;
+        blockedNegativeX = false;
     }
 
 

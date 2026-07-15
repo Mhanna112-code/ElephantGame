@@ -50,6 +50,15 @@ public class BulletRicochet : MonoBehaviour
             return;
         }
 
+        BossHealth boss = collision.collider.GetComponent<BossHealth>();
+
+        if (boss != null)
+        {
+            boss.TakeBulletDamage(1);
+            Destroy(gameObject);
+            return;
+        }
+
         if (bounceCount >= maxBounces)
         {
             Destroy(gameObject);

@@ -78,7 +78,7 @@ public class Health : MonoBehaviour
 
         if (boss != null)
         {
-            bossCollider = boss.GetComponent<Collider>();
+            bossCollider = boss.GetComponentInChildren<Collider>();
 
             if (bossCollider != null)
             {

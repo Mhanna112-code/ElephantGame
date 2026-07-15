@@ -4,7 +4,7 @@ public class BossStuckInHoney : MonoBehaviour
 {
     [Header("Movement")]
     public float normalSpeed = 5f;
-    public float honeySpeed = 1.5f;
+    public float honeySpeed = 0.5f;
 
     [Header("References")]
     public Rigidbody bossRb;
@@ -13,6 +13,8 @@ public class BossStuckInHoney : MonoBehaviour
     private int honeyContacts = 0;
 
     private bool InHoney => honeyContacts > 0;
+
+    public bool IsInHoney => InHoney;
 
 
     // Honey is detected by its HoneyDrop component instead of a "Honey" tag —
