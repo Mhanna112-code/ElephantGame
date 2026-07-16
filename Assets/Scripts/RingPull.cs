@@ -28,6 +28,15 @@ public class RingPull : MonoBehaviour
 
     private bool spikesDisabled;
 
+    [Header("Spike Damage")]
+    [Tooltip("Boss within this range of a spike when the ring is fully pulled takes damage and registers a spike hit (phase 3 counter).")]
+    public float spikeDamageRadius = 4.5f;
+    public int spikeDamage = 25;
+    [Tooltip("Minimum time between spike strikes from this ring.")]
+    public float spikeRefireDelay = 1.5f;
+    private float lastStrikeTime = -999f;
+    private float previousPullAmount;
+
     public void DisableSpikes()
     {
         spikesDisabled = true;
@@ -46,6 +55,15 @@ public class RingPull : MonoBehaviour
             }
 
             spike1.SetBlendShapeWeight(0, 100f);
+        }
+
+        // The open editor scene keeps the field's old value (3) across script
+        // recompiles, so a changed C# default never reaches it. Enforce the
+        // tuned minimum here instead of trusting serialized state.
+        if (spikeDamageRadius < 4.5f)
+        {
+            Debug.Log($"[Spike] spikeDamageRadius was {spikeDamageRadius} (stale scene value) - raised to 4.5", this);
+            spikeDamageRadius = 4.5f;
         }
 
         if (ring == null)
@@ -148,6 +166,57 @@ public class RingPull : MonoBehaviour
 
 
         UpdateSpikes(pullAmount);
+
+        // Full pull = spike strike. Damages the boss if he is standing at a
+        // spike (the whole point of luring him into the honey — he wasn't
+        // taking any damage before because nothing ever called into
+        // BossHealth/RegisterSpikeHit).
+        bool fullyPulled = pullAmount >= maxPullDistance * 0.9f;
+        bool wasFullyPulled = previousPullAmount >= maxPullDistance * 0.9f;
+        previousPullAmount = pullAmount;
+
+        if (fullyPulled && !wasFullyPulled && Time.time - lastStrikeTime >= spikeRefireDelay && !spikesDisabled)
+        {
+            lastStrikeTime = Time.time;
+            StrikeBoss();
+        }
+    }
+
+    void StrikeBoss()
+    {
+        BossHealth bossHealth = FindFirstObjectByType<BossHealth>();
+        if (bossHealth == null)
+            return;
+
+        Transform boss = bossHealth.transform;
+        bool struck = false;
+
+        foreach (SkinnedMeshRenderer spike in new[] { spike1, spike2 })
+        {
+            if (spike == null)
+                continue;
+
+            float d = Vector3.Distance(boss.position, spike.bounds.center);
+            if (d <= spikeDamageRadius)
+            {
+                Debug.Log($"[Spike] STRIKE: boss at {d:F1} of '{spike.name}' (radius {spikeDamageRadius}) -> {spikeDamage} dmg", this);
+                bossHealth.TakeDamage(spikeDamage);
+
+                BossFightController controller = boss.GetComponent<BossFightController>();
+                if (controller != null)
+                    controller.RegisterSpikeHit();
+
+                struck = true;
+                break;
+            }
+        }
+
+        if (!struck)
+        {
+            string d1 = spike1 != null ? Vector3.Distance(boss.position, spike1.bounds.center).ToString("F1") : "n/a";
+            string d2 = spike2 != null ? Vector3.Distance(boss.position, spike2.bounds.center).ToString("F1") : "n/a";
+            Debug.Log($"[Spike] full pull but boss out of range (radius {spikeDamageRadius}): d(spike1)={d1} d(spike2)={d2} bossPos={boss.position}", this);
+        }
     }
 
 

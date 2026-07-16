@@ -11,6 +11,10 @@ public class BeehiveTarget : MonoBehaviour
     [Header("Hits")]
     public int hitsRequired = 3;
 
+    [Header("Re-arm")]
+    [Tooltip("Seconds after dropping honey before the hive can be hit and drop again. Set below 0 to make it one-shot.")]
+    public float rearmDelay = 10f;
+
     [Header("Shake")]
     public float shakeDuration = 0.5f;
     public float shakeAmount = 0.15f;
@@ -40,14 +44,20 @@ public class BeehiveTarget : MonoBehaviour
 
         currentHits++;
 
+        Debug.Log($"[Hive] '{name}' hit {currentHits}/{hitsRequired}", this);
+
         StartCoroutine(Shake());
 
 
         if (currentHits >= hitsRequired)
         {
             activated = true;
+            Debug.Log($"[Hive] '{name}' releasing honey (prefab={(honeyPrefab != null)}, spawnPoint={(honeySpawnPoint != null)})", this);
             StartCoroutine(ReleaseHoney());
             SpawnBeeSwarm();
+
+            if (rearmDelay >= 0f)
+                StartCoroutine(Rearm());
         }
     }
 
@@ -63,9 +73,14 @@ public class BeehiveTarget : MonoBehaviour
         swarm.Init(beePrefab, beeCount, spawnPosition, player, trunkTip != null ? trunkTip : player);
     }
 
+    // Bullet hits are routed here by BulletRicochet (which reliably receives the
+    // collision even when it lands on a child collider). The old OnCollisionEnter
+    // is kept only as a guard against double-counting removal regressions.
     void OnCollisionEnter(Collision collision)
     {
         if (collision.collider.CompareTag("Bullet"))
+            Debug.Log($"[Hive] '{name}' hive-side collision also saw the bullet (info only, not counted)", this);
+        if (false && collision.collider.CompareTag("Bullet"))
         {
             Hit();
 
@@ -89,6 +104,16 @@ public class BeehiveTarget : MonoBehaviour
         }
 
         transform.localPosition = originalPosition;
+    }
+
+
+    IEnumerator Rearm()
+    {
+        yield return new WaitForSeconds(rearmDelay);
+
+        currentHits = 0;
+        activated = false;
+        Debug.Log($"[Hive] '{name}' re-armed (hit it {hitsRequired} more times for more honey)", this);
     }
 
 

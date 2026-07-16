@@ -9,10 +9,21 @@ public class BossStuckInHoney : MonoBehaviour
     [Header("References")]
     public Rigidbody bossRb;
 
-    // counted (not a bool) so overlapping honey pools behave when leaving one
-    private int honeyContacts = 0;
+    // Tracked as a set of colliders (not a bare counter): puddles now melt away
+    // (Destroy) while the boss can be standing in them, and a counter that
+    // missed the exit event would slow him forever. Destroyed colliders become
+    // null in the set and are pruned on every query.
+    private readonly System.Collections.Generic.HashSet<Collider> honeyContacts =
+        new System.Collections.Generic.HashSet<Collider>();
 
-    private bool InHoney => honeyContacts > 0;
+    private bool InHoney
+    {
+        get
+        {
+            honeyContacts.RemoveWhere(c => c == null);
+            return honeyContacts.Count > 0;
+        }
+    }
 
     public bool IsInHoney => InHoney;
 
@@ -22,18 +33,21 @@ public class BossStuckInHoney : MonoBehaviour
     // match anything (part of issue #41).
     void OnTriggerEnter(Collider other)
     {
-        if (other.GetComponentInParent<HoneyDrop>() != null)
+        if (other.GetComponentInParent<HoneyDrop>() != null && honeyContacts.Add(other))
         {
-            honeyContacts++;
+            Debug.Log($"[BossHoney] boss ENTERED honey '{other.name}' (contacts={honeyContacts.Count}) -> speed {honeySpeed} (normal {normalSpeed}), jumping disabled", this);
         }
     }
 
 
     void OnTriggerExit(Collider other)
     {
-        if (other.GetComponentInParent<HoneyDrop>() != null)
+        if (honeyContacts.Remove(other))
         {
-            honeyContacts = Mathf.Max(0, honeyContacts - 1);
+            honeyContacts.RemoveWhere(c => c == null);
+            // 'other' may be a just-destroyed (melted) glob - don't touch .name then
+            string label = other != null ? other.name : "(melted)";
+            Debug.Log($"[BossHoney] boss LEFT honey '{label}' (contacts={honeyContacts.Count})", this);
         }
     }
 

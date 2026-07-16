@@ -96,6 +96,10 @@ public class BossFightController : MonoBehaviour
 
     [Tooltip("Layers actually walkable as floor. Must exclude ceilings/overhead geometry, or SnapToGround will treat their underside-facing-up top surface as ground and put the boss on top of it.")]
     public LayerMask floorMask = ~0;
+    [Tooltip("A ground hit more than this far ABOVE the boss's current height is ignored — stops SnapToGround from teleporting him onto overhead props (beehive, rims) whose tops the ray crosses. Issue: boss running around in mid-air.")]
+    public float maxStepUp = 1.2f;
+    [Tooltip("Kinematic pseudo-gravity: how fast the boss sinks when SnapToGround finds no floor under him (walking off an edge used to leave him striding on air forever).")]
+    public float unsupportedFallSpeed = 12f;
 
     private Rigidbody rb;
     private Animator animator;
@@ -104,6 +108,8 @@ public class BossFightController : MonoBehaviour
 
     private BossState state = BossState.Waiting;
     private float nextAttackTime;
+    private bool wasSupportedLastStep = true;
+    private bool jumpSuppressedByHoney = false;
     private float nextJumpTime;
     private bool busy;
 
@@ -157,8 +163,24 @@ public class BossFightController : MonoBehaviour
         {
             if (Time.time >= nextJumpTime)
             {
-                StartCoroutine(JumpAttackRoutine());
-                return;
+                // Honey is only a trap if it actually holds him: while stuck he
+                // may not jump (jumping is how he was escaping every puddle).
+                BossStuckInHoney honeyTrap = GetComponent<BossStuckInHoney>();
+                bool trapped = honeyTrap != null && !honeyTrap.CanJump();
+
+                if (trapped != jumpSuppressedByHoney)
+                {
+                    Debug.Log(trapped
+                        ? "[BossHoney] jump attack suppressed - boss is stuck in honey"
+                        : "[BossHoney] jump attacks re-enabled - boss escaped the honey", this);
+                    jumpSuppressedByHoney = trapped;
+                }
+
+                if (!trapped)
+                {
+                    StartCoroutine(JumpAttackRoutine());
+                    return;
+                }
             }
 
             float distance = Vector3.Distance(player.position, transform.position);
@@ -199,7 +221,23 @@ public class BossFightController : MonoBehaviour
 
         Vector3 newPos = rb.position + direction * speed * Time.fixedDeltaTime;
         newPos = ClampHorizontalMove(rb.position, newPos);
-        newPos = SnapToGround(newPos);
+
+        // Kinematic body: no gravity. Snap to the floor when there is one under
+        // him; sink at unsupportedFallSpeed when there is not, instead of
+        // striding on air at whatever height the last move left him.
+        bool supported = TryGetGroundHeight(newPos, out float groundY);
+        if (supported)
+            newPos.y = groundY;
+        else
+            newPos.y -= unsupportedFallSpeed * Time.fixedDeltaTime;
+
+        if (supported != wasSupportedLastStep)
+        {
+            Debug.Log(supported
+                ? $"[BossGround] regained floor at y={groundY:F2} (x={newPos.x:F1})"
+                : $"[BossGround] NO floor under boss at (x={newPos.x:F1}) - sinking (check floorMask/maxStepUp if this is wrong)", this);
+            wasSupportedLastStep = supported;
+        }
 
         rb.MovePosition(newPos);
 
@@ -432,6 +470,14 @@ public class BossFightController : MonoBehaviour
         Vector3 landingPosition = SnapToGround(clampedLandingTarget);
         Vector3 start = transform.position;
 
+        // Jump as high as needed to reach the player (issue #44): if they are
+        // airborne above us, raise the arc so its peak clears their height.
+        float requiredPeak = (player.position.y - start.y) + 1.5f;
+        float arcHeight = Mathf.Max(jumpAttackHeight, requiredPeak);
+        Debug.Log($"[BossJump] playerY={player.position.y:F1} bossY={start.y:F1} arcHeight={arcHeight:F1} (base {jumpAttackHeight}) landing={landingPosition}", this);
+
+        bool struckMidAir = false;
+
         float timer = 0f;
 
         while (timer < jumpAttackDuration)
@@ -440,10 +486,24 @@ public class BossFightController : MonoBehaviour
             float t = Mathf.Clamp01(timer / jumpAttackDuration);
 
             Vector3 position = Vector3.Lerp(start, landingPosition, t);
-            float bump = Mathf.Sin(t * Mathf.PI) * jumpAttackHeight;
+            float bump = Mathf.Sin(t * Mathf.PI) * arcHeight;
             position.y += Mathf.Min(bump, GetHeightClearance(position));
 
             rb.MovePosition(position);
+
+            // Contact damage while airborne — the point of jumping that high.
+            if (!struckMidAir && player != null &&
+                Vector3.Distance(transform.position, player.position) <= attackRange)
+            {
+                Health airHealth = player.GetComponent<Health>();
+                if (airHealth != null)
+                {
+                    airHealth.TakeDamage(jumpAttackDamage);
+                    struckMidAir = true;
+                    Debug.Log($"[BossJump] mid-air strike at t={t:F2} bossY={transform.position.y:F1}", this);
+                }
+            }
+
             yield return null;
         }
 
@@ -452,7 +512,7 @@ public class BossFightController : MonoBehaviour
         animator.SetTrigger(LandHash);
         FacePlayer();
 
-        if (player != null && Vector3.Distance(transform.position, player.position) <= attackRange + 1f)
+        if (!struckMidAir && player != null && Vector3.Distance(transform.position, player.position) <= attackRange + 1f)
         {
             Health health = player.GetComponent<Health>();
             if (health != null)
@@ -500,38 +560,57 @@ public class BossFightController : MonoBehaviour
 
         float timer = 0f;
 
+        Debug.Log($"[BossSlide] start dir={direction} bossX={rb.position.x:F1} playerX={player.position.x:F1}", this);
+        string endReason = "timeout";
+
+        // The jump attack lands the boss ON the player's x, so a plain
+        // "crossed past the player" check was true on the very first frame and
+        // the slide ended instantly (issue #43). Require sliding a real
+        // distance PAST the player before stopping.
+        const float slideOvershoot = 1.5f;
+
         while (timer < slideMaxDuration)
         {
             timer += Time.deltaTime;
 
             Vector3 intendedPos = rb.position + new Vector3(direction * slideSpeed * Time.deltaTime, 0f, 0f);
-            Vector3 nextPos = intendedPos;
-            bool hitWall = Vector3.Distance(nextPos, rb.position) < Vector3.Distance(intendedPos, rb.position) * 0.5f;
+            Vector3 nextPos = ClampHorizontalMove(rb.position, intendedPos);
+            bool hitWall = Vector3.Distance(nextPos, intendedPos) > 0.001f;
 
             nextPos = SnapToGround(nextPos);
             rb.MovePosition(nextPos);
 
             if (hitWall)
+            {
+                endReason = "wall";
                 break;
+            }
 
             if (player == null)
+            {
+                endReason = "playerLost";
                 break;
+            }
 
-            float sideNow = nextPos.x - player.position.x;
-
-            // Crossed once our side of the player flips relative to the direction we're sliding.
-            if (direction > 0f ? sideNow >= 0f : sideNow <= 0f)
+            // Stop only once we are well past the player in the slide direction.
+            float past = (nextPos.x - player.position.x) * direction;
+            if (past >= slideOvershoot)
+            {
+                endReason = "overshootPastPlayer";
                 break;
+            }
 
             yield return null;
         }
 
+        Debug.Log($"[BossSlide] end reason={endReason} t={timer:F2}s bossX={rb.position.x:F1}", this);
         animator.SetFloat(SpeedHash, 0f);
     }
 
     public void RegisterSpikeHit()
     {
         spikeHitCount++;
+        Debug.Log($"[Spike] boss spike hits: {spikeHitCount}/2 (phase3 at 2)", this);
 
         if (spikeHitCount >= 2 && !phase3Active)
         {
@@ -640,6 +719,15 @@ public class BossFightController : MonoBehaviour
 
 Vector3 SnapToGround(Vector3 position)
 {
+    if (TryGetGroundHeight(position, out float groundY))
+        position.y = groundY;
+    return position;
+}
+
+bool TryGetGroundHeight(Vector3 position, out float groundY)
+{
+    groundY = position.y;
+
     Vector3 rayStart = position + Vector3.up * groundRayStartHeight;
     float rayDistance = groundRayStartHeight + groundRayDistance;
 
@@ -652,7 +740,7 @@ Vector3 SnapToGround(Vector3 position)
     );
 
     if (hits.Length == 0)
-        return position;
+        return false;
 
     System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
 
@@ -662,12 +750,19 @@ Vector3 SnapToGround(Vector3 position)
         if (hit.collider.transform.IsChildOf(transform))
             continue;
 
-        position.y = hit.point.y + groundOffset;
-        return position;
+        // Skip surfaces well above the boss's current height (overhead props):
+        // walking under the beehive must not teleport him on top of it.
+        if (hit.point.y > position.y + maxStepUp)
+            continue;
+
+        groundY = hit.point.y + groundOffset;
+        return true;
     }
 
-    return position;
-}    float CalculateGroundOffset()
+    return false;
+}
+
+    float CalculateGroundOffset()
     {
         if (groundingCollider != null)
         {
