@@ -57,6 +57,15 @@ public class RingPull : MonoBehaviour
             spike1.SetBlendShapeWeight(0, 100f);
         }
 
+        // The open editor scene keeps the field's old value (3) across script
+        // recompiles, so a changed C# default never reaches it. Enforce the
+        // tuned minimum here instead of trusting serialized state.
+        if (spikeDamageRadius < 4.5f)
+        {
+            Debug.Log($"[Spike] spikeDamageRadius was {spikeDamageRadius} (stale scene value) - raised to 4.5", this);
+            spikeDamageRadius = 4.5f;
+        }
+
         if (ring == null)
             ring = transform;
 

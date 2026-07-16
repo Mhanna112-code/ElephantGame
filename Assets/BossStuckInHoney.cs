@@ -25,6 +25,7 @@ public class BossStuckInHoney : MonoBehaviour
         if (other.GetComponentInParent<HoneyDrop>() != null)
         {
             honeyContacts++;
+            Debug.Log($"[BossHoney] boss ENTERED honey '{other.name}' (contacts={honeyContacts}) -> speed {honeySpeed} (normal {normalSpeed}), jumping disabled", this);
         }
     }
 
@@ -34,6 +35,7 @@ public class BossStuckInHoney : MonoBehaviour
         if (other.GetComponentInParent<HoneyDrop>() != null)
         {
             honeyContacts = Mathf.Max(0, honeyContacts - 1);
+            Debug.Log($"[BossHoney] boss LEFT honey '{other.name}' (contacts={honeyContacts})", this);
         }
     }
 

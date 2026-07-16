@@ -109,6 +109,7 @@ public class BossFightController : MonoBehaviour
     private BossState state = BossState.Waiting;
     private float nextAttackTime;
     private bool wasSupportedLastStep = true;
+    private bool jumpSuppressedByHoney = false;
     private float nextJumpTime;
     private bool busy;
 
@@ -162,8 +163,24 @@ public class BossFightController : MonoBehaviour
         {
             if (Time.time >= nextJumpTime)
             {
-                StartCoroutine(JumpAttackRoutine());
-                return;
+                // Honey is only a trap if it actually holds him: while stuck he
+                // may not jump (jumping is how he was escaping every puddle).
+                BossStuckInHoney honeyTrap = GetComponent<BossStuckInHoney>();
+                bool trapped = honeyTrap != null && !honeyTrap.CanJump();
+
+                if (trapped != jumpSuppressedByHoney)
+                {
+                    Debug.Log(trapped
+                        ? "[BossHoney] jump attack suppressed - boss is stuck in honey"
+                        : "[BossHoney] jump attacks re-enabled - boss escaped the honey", this);
+                    jumpSuppressedByHoney = trapped;
+                }
+
+                if (!trapped)
+                {
+                    StartCoroutine(JumpAttackRoutine());
+                    return;
+                }
             }
 
             float distance = Vector3.Distance(player.position, transform.position);
