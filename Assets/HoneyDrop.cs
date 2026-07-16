@@ -73,7 +73,12 @@ public class HoneyDrop : MonoBehaviour
 
         // Only land on surfaces BELOW the glob's centre — brushing the side of
         // a wall or a prop while falling should not freeze the drop mid-air.
-        if (other.bounds.max.y > transform.position.y)
+        // NOTE: uses the closest point, not bounds.max.y — the room floor is a
+        // compound collider whose bounding box includes the walls, so its
+        // 'top' looked above the glob forever and every floor contact was
+        // rejected (diagnosed from the [Honey] contact logs).
+        Vector3 nearest = other.ClosestPoint(transform.position);
+        if (nearest.y > transform.position.y - 0.05f)
             return;
 
         // static level geometry has no rigidbody; the boss and player do
