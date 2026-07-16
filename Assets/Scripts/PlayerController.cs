@@ -47,6 +47,7 @@ public class PlayerController : MonoBehaviour
         rb.maxDepenetrationVelocity = 6f;
         rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
         Debug.Log("[Player] anti-tunnel active: maxDepenetrationVelocity=6, CCD=Continuous", this);
+        Debug.Log("[Build] " + BuildStamp.Version, this);
 
         Collider bulletCol = GetComponent<Collider>();
         GameObject player = GameObject.FindGameObjectWithTag("Player");
