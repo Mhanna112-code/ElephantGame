@@ -203,7 +203,11 @@ public class RingPull : MonoBehaviour
         }
 
         if (!struck)
-            Debug.Log($"[Spike] full pull but boss out of range of both spikes (radius {spikeDamageRadius}) - no damage", this);
+        {
+            string d1 = spike1 != null ? Vector3.Distance(boss.position, spike1.bounds.center).ToString("F1") : "n/a";
+            string d2 = spike2 != null ? Vector3.Distance(boss.position, spike2.bounds.center).ToString("F1") : "n/a";
+            Debug.Log($"[Spike] full pull but boss out of range (radius {spikeDamageRadius}): d(spike1)={d1} d(spike2)={d2} bossPos={boss.position}", this);
+        }
     }
 
 
