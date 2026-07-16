@@ -30,7 +30,7 @@ public class RingPull : MonoBehaviour
 
     [Header("Spike Damage")]
     [Tooltip("Boss within this range of a spike when the ring is fully pulled takes damage and registers a spike hit (phase 3 counter).")]
-    public float spikeDamageRadius = 3f;
+    public float spikeDamageRadius = 4.5f;
     public int spikeDamage = 25;
     [Tooltip("Minimum time between spike strikes from this ring.")]
     public float spikeRefireDelay = 1.5f;

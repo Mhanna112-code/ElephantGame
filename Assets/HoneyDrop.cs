@@ -71,15 +71,12 @@ public class HoneyDrop : MonoBehaviour
             return;
         }
 
-        // Only land on surfaces BELOW the glob's centre — brushing the side of
-        // a wall or a prop while falling should not freeze the drop mid-air.
-        // NOTE: uses the closest point, not bounds.max.y — the room floor is a
-        // compound collider whose bounding box includes the walls, so its
-        // 'top' looked above the glob forever and every floor contact was
-        // rejected (diagnosed from the [Honey] contact logs).
-        Vector3 nearest = other.ClosestPoint(transform.position);
-        if (nearest.y > transform.position.y - 0.05f)
-            return;
+        // No below-the-glob geometry test: the room floor is a NON-CONVEX mesh
+        // collider, and Physics.ClosestPoint silently no-ops on those (returns
+        // the query point), which made every real floor contact look like a
+        // side-brush. The glob falls straight down and hive/trigger/rigidbody
+        // contacts are already excluded above, so any remaining static contact
+        // IS ground. (Diagnosed from two rounds of [Honey] contact logs.)
 
         // static level geometry has no rigidbody; the boss and player do
         bool isStaticGeometry = other.attachedRigidbody == null;
