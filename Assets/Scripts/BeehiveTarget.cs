@@ -11,6 +11,10 @@ public class BeehiveTarget : MonoBehaviour
     [Header("Hits")]
     public int hitsRequired = 3;
 
+    [Header("Re-arm")]
+    [Tooltip("Seconds after dropping honey before the hive can be hit and drop again. Set below 0 to make it one-shot.")]
+    public float rearmDelay = 10f;
+
     [Header("Shake")]
     public float shakeDuration = 0.5f;
     public float shakeAmount = 0.15f;
@@ -51,6 +55,9 @@ public class BeehiveTarget : MonoBehaviour
             Debug.Log($"[Hive] '{name}' releasing honey (prefab={(honeyPrefab != null)}, spawnPoint={(honeySpawnPoint != null)})", this);
             StartCoroutine(ReleaseHoney());
             SpawnBeeSwarm();
+
+            if (rearmDelay >= 0f)
+                StartCoroutine(Rearm());
         }
     }
 
@@ -97,6 +104,16 @@ public class BeehiveTarget : MonoBehaviour
         }
 
         transform.localPosition = originalPosition;
+    }
+
+
+    IEnumerator Rearm()
+    {
+        yield return new WaitForSeconds(rearmDelay);
+
+        currentHits = 0;
+        activated = false;
+        Debug.Log($"[Hive] '{name}' re-armed (hit it {hitsRequired} more times for more honey)", this);
     }
 
 
