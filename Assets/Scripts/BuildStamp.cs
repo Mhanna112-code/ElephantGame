@@ -3,5 +3,5 @@
 // Unity is running stale assemblies: focus the editor and let it recompile.
 public static class BuildStamp
 {
-    public const string Version = "deadline-batch rev9: honey now traps (no jumping while stuck) + spike radius floor enforced in code + [BossHoney] logs";
+    public const string Version = "deadline-batch rev10: honey puddles melt after 12s (were permanent) + boss honey tracking survives melting underfoot";
 }

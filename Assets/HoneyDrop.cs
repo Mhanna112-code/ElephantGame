@@ -4,6 +4,9 @@ public class HoneyDrop : MonoBehaviour
 {
     public float fallSpeed = 5f;
 
+    [Tooltip("Seconds a puddle persists after landing before melting away. Hives re-arm every 10s, so ~one batch is active at a time. Set below 0 to keep forever.")]
+    public float puddleLifetime = 12f;
+
     private bool landed = false;
     private float spawnY;
     private float airtime;
@@ -84,7 +87,8 @@ public class HoneyDrop : MonoBehaviour
         if (isStaticGeometry || other.CompareTag("Floor"))
         {
             landed = true;
-            Debug.Log($"[Honey] landed on '{other.name}' at y={transform.position.y:F2}", this);
+            Debug.Log($"[Honey] landed on '{other.name}' at y={transform.position.y:F2}" +
+                      (puddleLifetime >= 0f ? $", melting in {puddleLifetime}s" : ", permanent"), this);
 
             Rigidbody rb = GetComponent<Rigidbody>();
 
@@ -93,6 +97,21 @@ public class HoneyDrop : MonoBehaviour
                 rb.isKinematic = true;
                 rb.linearVelocity = Vector3.zero;
             }
+
+            if (puddleLifetime >= 0f)
+                StartCoroutine(MeltAway());
         }
+    }
+
+
+    // Without a lifetime, every re-armed hive adds three permanent globs and
+    // the arena slowly tiles over with honey. BossStuckInHoney tracks colliders
+    // (not a bare counter) so a puddle melting under the boss releases him.
+    System.Collections.IEnumerator MeltAway()
+    {
+        yield return new WaitForSeconds(puddleLifetime);
+
+        Debug.Log($"[Honey] '{name}' melted away after {puddleLifetime}s", this);
+        Destroy(gameObject);
     }
 }
